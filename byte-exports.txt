@@ -1,0 +1,17 @@
+===users.ts===
+export type UserRole = "admin" | "user";
+export interface User {
+export type SafeUser = {
+export const DEFAULT_ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "admin@cupangpandi.com";
+export const DEFAULT_ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "admin123";
+export function seedAdminIfMissing(): SafeUser {
+export function registerUser(input: {
+export function findUserByEmail(email: string): SafeUser | null {
+export function loginUser(input: {
+===session.ts===
+export const SESSION_COOKIE_NAME = "cupangpandi_session";
+export interface SessionPayload {
+export function createSessionToken(payload: SessionPayload): string {
+export function readSessionToken(
+export function sessionExpiresAt(): Date {
+export function sessionCookieOptions(): {

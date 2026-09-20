@@ -1,0 +1,677 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import { notifyUploadsChanged } from "@/app/ui-upload/live-refresh";
+
+type StoredEntry = {
+  type: "folder" | "file";
+  name: string;
+  relPath: string;
+  url: string;
+};
+
+function RobotWaving({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 220 260" className={className} fill="none">
+      <rect x="30" y="20" width="120" height="130" rx="28" fill="#A8DDE8" stroke="#2B5566" strokeWidth="4" />
+      <circle cx="70" cy="75" r="12" fill="#fff" stroke="#2B5566" strokeWidth="3" />
+      <circle cx="70" cy="75" r="4" fill="#2B5566" />
+      <circle cx="112" cy="75" r="12" fill="#fff" stroke="#2B5566" strokeWidth="3" />
+      <circle cx="112" cy="75" r="4" fill="#2B5566" />
+      <path d="M75 108 Q91 118 107 108" stroke="#2B5566" strokeWidth="4" strokeLinecap="round" fill="none" />
+      <rect x="70" y="150" width="42" height="60" rx="14" fill="#A8DDE8" stroke="#2B5566" strokeWidth="4" />
+      <rect x="60" y="205" width="20" height="45" rx="8" fill="#A8DDE8" stroke="#2B5566" strokeWidth="4" />
+      <rect x="102" y="205" width="20" height="45" rx="8" fill="#A8DDE8" stroke="#2B5566" strokeWidth="4" />
+      <path d="M40 100 Q10 80 20 45" stroke="#2B5566" strokeWidth="6" strokeLinecap="round" fill="none" />
+      <circle cx="20" cy="42" r="7" fill="#A8DDE8" stroke="#2B5566" strokeWidth="4" />
+    </svg>
+  );
+}
+
+function RobotBox({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 220 260" className={className} fill="none">
+      <rect x="70" y="20" width="120" height="130" rx="28" fill="#A8DDE8" stroke="#2B5566" strokeWidth="4" />
+      <circle cx="112" cy="75" r="12" fill="#fff" stroke="#2B5566" strokeWidth="3" />
+      <circle cx="112" cy="75" r="4" fill="#2B5566" />
+      <circle cx="152" cy="75" r="12" fill="#fff" stroke="#2B5566" strokeWidth="3" />
+      <circle cx="152" cy="75" r="4" fill="#2B5566" />
+      <path d="M117 108 Q131 116 145 108" stroke="#2B5566" strokeWidth="4" strokeLinecap="round" fill="none" />
+      <rect x="112" y="150" width="42" height="60" rx="14" fill="#A8DDE8" stroke="#2B5566" strokeWidth="4" />
+      <rect x="102" y="205" width="20" height="45" rx="8" fill="#A8DDE8" stroke="#2B5566" strokeWidth="4" />
+      <rect x="144" y="205" width="20" height="45" rx="8" fill="#A8DDE8" stroke="#2B5566" strokeWidth="4" />
+      <path d="M78 105 L40 130 L20 105 L58 82 Z" fill="#F7941D" stroke="#2B5566" strokeWidth="4" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function RobotDelivery({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 260 320" className={className} fill="none">
+      <path d="M170 40 L190 15 M195 25 L215 20" stroke="#2B5566" strokeWidth="6" strokeLinecap="round" />
+      <rect x="90" y="50" width="130" height="145" rx="30" fill="#A8DDE8" stroke="#2B5566" strokeWidth="5" />
+      <circle cx="90" cy="115" r="14" fill="#fff" stroke="#2B5566" strokeWidth="4" />
+      <circle cx="90" cy="115" r="5" fill="#2B5566" />
+      <path d="M135 108 Q150 118 165 108" stroke="#2B5566" strokeWidth="5" strokeLinecap="round" fill="none" />
+      <rect x="135" y="195" width="46" height="65" rx="16" fill="#A8DDE8" stroke="#2B5566" strokeWidth="5" />
+      <rect x="122" y="260" width="24" height="50" rx="9" fill="#A8DDE8" stroke="#2B5566" strokeWidth="5" />
+      <rect x="170" y="260" width="24" height="50" rx="9" fill="#A8DDE8" stroke="#2B5566" strokeWidth="5" />
+      <path d="M95 150 L35 175 L55 210 L110 185 Z" fill="#F7941D" stroke="#2B5566" strokeWidth="5" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconFacebook() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
+      <path d="M13.5 21v-8.1h2.7l.4-3.2h-3.1V7.7c0-.9.3-1.6 1.6-1.6h1.7V3.1C16.5 3 15.5 3 14.3 3c-2.5 0-4.2 1.5-4.2 4.3v2.4H7.4v3.2h2.7V21z" />
+    </svg>
+  );
+}
+function IconTwitter() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
+      <path d="M22 5.9c-.7.3-1.5.5-2.3.6.8-.5 1.5-1.3 1.8-2.3-.8.5-1.7.8-2.6 1a4 4 0 0 0-6.9 3.7A11.5 11.5 0 0 1 3.6 4.6a4 4 0 0 0 1.3 5.4c-.6 0-1.3-.2-1.8-.5v.1a4.1 4.1 0 0 0 3.3 4 4 4 0 0 1-1.8.1 4.1 4.1 0 0 0 3.8 2.9A8.2 8.2 0 0 1 2 18.4a11.6 11.6 0 0 0 6.3 1.8c7.5 0 11.6-6.4 11.6-11.9v-.5c.8-.6 1.5-1.3 2.1-2z" />
+    </svg>
+  );
+}
+function IconInstagram() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
+      <rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="17.4" cy="6.6" r="1.1" />
+    </svg>
+  );
+}
+
+type UploadSlot = { id: string; label: string };
+
+type StagedItem = { file: File; relPath: string };
+
+const newUploadSlots: UploadSlot[] = [
+  { id: "new-page", label: "New page" },
+  { id: "login-page-file", label: "Login page file" },
+  { id: "sheet-page", label: "Sheet page" },
+];
+
+const appsUiSlots: UploadSlot[] = [
+  { id: "apps-page", label: "Apps page" },
+  { id: "apps-login-page-file", label: "Login page file" },
+  { id: "apps-sheet-page", label: "Sheet page" },
+];
+
+const fixedSlotIds = [
+  ...newUploadSlots.map((s) => s.id),
+  ...appsUiSlots.map((s) => s.id),
+];
+
+const placeholderSlotIds = ["new-page", "apps-page"];
+
+function relPathsOf(files: File[]): string[] {
+  return files.map((f) =>
+    (f as File & { webkitRelativePath?: string }).webkitRelativePath ||
+    f.name
+  );
+}
+
+function UploadCard({
+  slot,
+  stored,
+  uploading,
+  onUpload,
+  onDelete,
+  onDeleteAll,
+  deleting,
+  deletingAll,
+}: {
+  slot: UploadSlot;
+  stored: StoredEntry[];
+  uploading: boolean;
+  onUpload: (added: StagedItem[]) => void;
+  onDelete: (entry: StoredEntry) => void;
+  onDeleteAll: () => void;
+  deleting: string | null;
+  deletingAll: boolean;
+}) {
+  const fileInputId = `file-${slot.id}`;
+  const folderInputId = `folder-${slot.id}`;
+
+  function addFromInput(
+    input: HTMLInputElement | null,
+    folderMode: boolean
+  ) {
+    const picked = input?.files ? Array.from(input.files) : [];
+    if (picked.length === 0 || uploading) return;
+    const relPaths = folderMode
+      ? relPathsOf(picked)
+      : picked.map((f) => f.name);
+    onUpload(picked.map((file, i) => ({ file, relPath: relPaths[i] })));
+    if (input) {
+      input.value = "";
+    }
+  }
+
+  return (
+    <div className="rounded-2xl border-2 border-[var(--color-cream)] bg-[var(--color-orange-deep)]/40 p-5 text-center">
+      <h3 className="display text-sm font-bold text-[var(--color-cream)]">
+        {slot.label}
+      </h3>
+      <p className="mt-4 text-[11px] leading-relaxed text-[var(--color-cream)]/90">
+        This admin panel allows uploading files
+        <br />
+        Multiple formats supported
+        <br />
+        Max 10&nbsp;MB per file
+      </p>
+
+      {stored.length > 0 && (
+        <div className="mt-4 rounded-xl border border-[var(--color-cream)]/30 bg-[var(--color-cream)]/10 p-3 text-left">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--color-yellow)]">
+            Stored here
+          </p>
+          <ul className="mt-2 space-y-1.5">
+            {stored.slice(0, 6).map((entry) => (
+              <li
+                key={entry.relPath}
+                className="flex items-center justify-between gap-2"
+              >
+                <span
+                  className="truncate text-[11px] font-semibold text-[var(--color-cream)]"
+                  title={entry.relPath}
+                >
+                  {entry.type === "folder" ? "📁" : "📄"} {entry.relPath}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => onDelete(entry)}
+                  disabled={deleting === entry.relPath}
+                  className="shrink-0 rounded-full bg-[#b3261e] px-2.5 py-0.5 text-[10px] font-bold text-white transition hover:brightness-110 disabled:opacity-50"
+                >
+                  {deleting === entry.relPath ? "…" : "Delete"}
+                </button>
+              </li>
+            ))}
+          </ul>
+          {stored.length > 6 && (
+            <p className="mt-1.5 text-center text-[10px] text-[var(--color-cream)]/70">
+              +{stored.length - 6} more
+            </p>
+          )}
+        </div>
+      )}
+
+      <div className="mt-4 flex items-center justify-center gap-2">
+        <label
+          htmlFor={fileInputId}
+          className="cursor-pointer rounded-full bg-[var(--color-yellow)] px-4 py-1.5 text-xs font-bold text-[var(--color-orange-deep)] transition hover:-translate-y-0.5"
+        >
+          {uploading ? "Uploading…" : "Add file"}
+        </label>
+        <input
+          id={fileInputId}
+          type="file"
+          multiple
+          className="sr-only"
+          onChange={(e) => addFromInput(e.target, false)}
+        />
+
+        <label
+          htmlFor={folderInputId}
+          className="cursor-pointer rounded-full border-2 border-[var(--color-yellow)] px-4 py-1.5 text-xs font-bold text-[var(--color-yellow)] transition hover:-translate-y-0.5"
+        >
+          Upload folder
+        </label>
+        <input
+          id={folderInputId}
+          type="file"
+          multiple
+          className="sr-only"
+          {...({
+            webkitdirectory: "",
+          } as React.InputHTMLAttributes<HTMLInputElement>)}
+          onChange={(e) => addFromInput(e.target, true)}
+        />
+
+        <button
+          type="button"
+          onClick={onDeleteAll}
+          disabled={deletingAll}
+          className="shrink-0 rounded-full bg-[#b3261e] px-4 py-1.5 text-xs font-bold text-white transition hover:brightness-110 disabled:opacity-50"
+        >
+          {deletingAll ? "…" : "Delete all"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function SectionBanner({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="mx-auto max-w-4xl rounded-full border-2 border-[var(--color-cream)] bg-[var(--color-orange-deep)] py-2 text-center">
+      <span className="display text-sm font-bold tracking-wide text-[var(--color-cream)]">
+        {children}
+      </span>
+    </div>
+  );
+}
+
+export default function AdminPage() {
+  const [notes, setNotes] = useState("");
+  const [status, setStatus] = useState<string | null>(null);
+  const [stored, setStored] = useState<Record<string, StoredEntry[]>>({});
+  const [uploadingSlot, setUploadingSlot] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const [deletingAll, setDeletingAll] = useState<string | null>(null);
+  const [removedSlots, setRemovedSlots] = useState<string[]>([]);
+  const [newSection, setNewSection] = useState<UploadSlot[]>(newUploadSlots);
+  const [appsSection, setAppsSection] = useState<UploadSlot[]>(appsUiSlots);
+  const [showCardModal, setShowCardModal] = useState(false);
+  const [cardTitle, setCardTitle] = useState("");
+  const [cardSection, setCardSection] = useState<"new" | "apps">("new");
+  const [creatingCard, setCreatingCard] = useState(false);
+
+  const loadStored = useCallback(async () => {
+    try {
+      const res = await fetch("/api/cards", { cache: "no-store" });
+      if (!res.ok) return;
+      const data = (await res.json()) as {
+        slots: {
+          newSection: UploadSlot[];
+          appsSection: UploadSlot[];
+        };
+        folders: Record<string, StoredEntry[]>;
+      };
+      setNewSection(data.slots?.newSection ?? newUploadSlots);
+      setAppsSection(data.slots?.appsSection ?? appsUiSlots);
+      setStored(data.folders ?? {});
+    } catch {
+      // ignore — panel still works for uploads
+    }
+  }, []);
+
+  useEffect(() => {
+    loadStored();
+  }, [loadStored]);
+
+  async function handleUpload(slotId: string, added: StagedItem[]) {
+    if (added.length === 0) return;
+    setUploadingSlot(slotId);
+    setStatus(null);
+    try {
+      const form = new FormData();
+      added.forEach((item) => {
+        form.append(slotId, item.file);
+      });
+      form.append(
+        `paths-${slotId}`,
+        JSON.stringify(added.map((item) => item.relPath))
+      );
+      const res = await fetch("/api/upload", { method: "POST", body: form });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.message ?? "Upload failed. Please try again.");
+      }
+      setStatus(`Uploaded ${added.length} file(s).`);
+      await loadStored();
+      notifyUploadsChanged();
+    } catch (err) {
+      setStatus(err instanceof Error ? err.message : "Upload failed.");
+    } finally {
+      setUploadingSlot(null);
+    }
+  }
+
+  async function handleDelete(entry: StoredEntry, slotId: string) {
+    const key = `${slotId}/${entry.relPath}`;
+    setDeleting(key);
+    try {
+      const res = await fetch(
+        `/api/files?slot=${encodeURIComponent(slotId)}&path=${encodeURIComponent(entry.relPath)}`,
+        { method: "DELETE" }
+      );
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.message ?? "Couldn't delete that file.");
+      }
+      setStatus(`Deleted ${entry.type === "folder" ? "folder" : "file"}: ${entry.relPath}`);
+      setStored((prev) => ({
+        ...prev,
+        [slotId]: (prev[slotId] ?? []).filter(
+          (e) =>
+            e.relPath !== entry.relPath &&
+            !e.relPath.startsWith(`${entry.relPath}/`)
+        ),
+      }));
+      notifyUploadsChanged();
+    } catch (err) {
+      setStatus(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setDeleting(null);
+    }
+  }
+
+  async function handleDeleteAll(slotId: string) {
+    const isCustom =
+      [...newSection, ...appsSection].some(
+        (s) => s.id === slotId
+      ) && !fixedSlotIds.includes(slotId);
+
+    if (
+      !window.confirm(
+        isCustom
+          ? "Delete this entire page/card? This can't be undone."
+          : "Delete this entire box? This can't be undone."
+      )
+    ) {
+      return;
+    }
+    setDeletingAll(slotId);
+    try {
+      if (isCustom) {
+        const res = await fetch(
+          `/api/cards?id=${encodeURIComponent(slotId)}`,
+          { method: "DELETE" }
+        );
+        if (!res.ok) {
+          const data = await res.json().catch(() => null);
+          throw new Error(data?.message ?? "Couldn't delete this card.");
+        }
+        setNewSection((prev) => prev.filter((s) => s.id !== slotId));
+        setAppsSection((prev) => prev.filter((s) => s.id !== slotId));
+      } else {
+        const res = await fetch(
+          `/api/files?slot=${encodeURIComponent(slotId)}&all=1`,
+          { method: "DELETE" }
+        );
+        if (!res.ok) {
+          const data = await res.json().catch(() => null);
+          throw new Error(data?.message ?? "Couldn't empty this box.");
+        }
+        setRemovedSlots((prev) => [...prev, slotId]);
+        setStored((prev) => ({ ...prev, [slotId]: [] }));
+      }
+      setStatus(isCustom ? "Page/card deleted." : "Box deleted.");
+      notifyUploadsChanged();
+    } catch (err) {
+      setStatus(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setDeletingAll(null);
+    }
+  }
+
+  async function handleCreateCard() {
+    const title = cardTitle.trim();
+    if (!title) {
+      setStatus("Please enter a title for the new page.");
+      return;
+    }
+    setCreatingCard(true);
+    setStatus(null);
+    try {
+      const res = await fetch("/api/cards", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ label: title, section: cardSection }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.message ?? "Couldn't create the page.");
+      }
+      const data = (await res.json()) as { card: UploadSlot };
+      if (cardSection === "apps") {
+        setAppsSection((prev) => [...prev, data.card]);
+        setStored((prev) => ({ ...prev, [data.card.id]: [] }));
+      } else {
+        setNewSection((prev) => [...prev, data.card]);
+        setStored((prev) => ({ ...prev, [data.card.id]: [] }));
+      }
+      setCardTitle("");
+      setShowCardModal(false);
+      setStatus(`Created "${data.card.label}".`);
+      notifyUploadsChanged();
+    } catch (err) {
+      setStatus(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setCreatingCard(false);
+    }
+  }
+
+  async function handleFinishCreateCard() {
+    await handleCreateCard();
+  }
+
+  return (
+    <main className="min-h-screen bg-[var(--color-orange)]">
+      {/* Top bar */}
+      <header className="flex items-center justify-end gap-6 border-b-2 border-[var(--color-cream)]/20 bg-[var(--color-yellow)] px-6 py-2 text-xs">
+        <Link href="/" className="text-[var(--color-ink-soft)] hover:text-[var(--color-ink)]">
+          Page 1
+        </Link>
+        <Link href="/login" className="text-[var(--color-ink-soft)] hover:text-[var(--color-ink)]">
+          Page 2
+        </Link>
+        <Link href="/ui-upload" className="text-[var(--color-ink-soft)] hover:text-[var(--color-ink)]">
+          Page 3
+        </Link>
+        <span className="font-bold text-[var(--color-ink)]">Page 4</span>
+      </header>
+
+      {/* Hero */}
+      <section className="bg-[var(--color-cream)] px-6 pb-10 pt-8 text-center">
+        <p className="display text-sm font-semibold text-[var(--color-orange-deep)]">
+          Admin page
+        </p>
+        <h1 className="display mt-2 text-4xl font-extrabold text-[var(--color-orange)] sm:text-5xl">
+          Welcome !!
+        </h1>
+        <div className="mt-6 flex items-end justify-center gap-4">
+          <RobotWaving className="h-28 w-auto" />
+          <RobotBox className="h-28 w-auto" />
+        </div>
+      </section>
+
+      {/* New UI uploaded */}
+      <section className="px-6 py-10">
+        <SectionBanner>New UI uploaded</SectionBanner>
+        <div className="mx-auto mt-8 grid max-w-4xl grid-cols-1 items-start gap-6 sm:grid-cols-3">
+          {newSection
+            .filter(
+              (slot) =>
+                !removedSlots.includes(slot.id) &&
+                !placeholderSlotIds.includes(slot.id)
+            )
+            .map((slot) => (
+              <UploadCard
+                key={slot.id}
+                slot={slot}
+                stored={stored[slot.id] ?? []}
+                uploading={uploadingSlot === slot.id}
+                onUpload={(added) => handleUpload(slot.id, added)}
+                onDelete={(entry) => handleDelete(entry, slot.id)}
+                onDeleteAll={() => handleDeleteAll(slot.id)}
+                deleting={deleting}
+                deletingAll={deletingAll === slot.id}
+              />
+            ))}
+        </div>
+      </section>
+
+      {/* Apps UI design */}
+      <section className="bg-[var(--color-orange-deep)]/20 px-6 py-10">
+        <SectionBanner>Apps UI design</SectionBanner>
+        <div className="mx-auto mt-8 grid max-w-4xl grid-cols-1 items-start gap-6 sm:grid-cols-3">
+          {appsSection
+            .filter(
+              (slot) =>
+                !removedSlots.includes(slot.id) &&
+                !placeholderSlotIds.includes(slot.id)
+            )
+            .map((slot) => (
+              <UploadCard
+                key={slot.id}
+                slot={slot}
+                stored={stored[slot.id] ?? []}
+                uploading={uploadingSlot === slot.id}
+                onUpload={(added) => handleUpload(slot.id, added)}
+                onDelete={(entry) => handleDelete(entry, slot.id)}
+                onDeleteAll={() => handleDeleteAll(slot.id)}
+                deleting={deleting}
+                deletingAll={deletingAll === slot.id}
+              />
+            ))}
+        </div>
+
+        <div className="mx-auto mt-8 max-w-4xl text-center">
+          <button
+            type="button"
+            onClick={() => setShowCardModal(true)}
+            disabled={creatingCard}
+            className="rounded-full bg-[var(--color-yellow)] px-8 py-2.5 text-sm font-extrabold text-[var(--color-orange-deep)] shadow-[0_3px_0_0_var(--color-orange-deep)] transition hover:-translate-y-0.5 active:translate-y-0 active:shadow-none disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {creatingCard ? "Creating…" : "Upload files"}
+          </button>
+          {status && (
+            <p className="mt-3 text-sm font-semibold text-[var(--color-cream)]">
+              {status}
+            </p>
+          )}
+        </div>
+      </section>
+
+      {/* Feedback / notes */}
+      <section className="bg-[var(--color-cream)] px-6 py-12">
+        <div className="mx-auto max-w-4xl">
+          <h2 className="display inline-block rounded-full border-2 border-[var(--color-orange-deep)] px-6 py-2 text-lg font-bold text-[var(--color-orange-deep)]">
+            Feedback
+          </h2>
+          <p className="mt-3 text-xs text-[var(--color-ink-soft)]">
+            Add a note for this batch of uploads (visible to your team, not
+            to visitors).
+          </p>
+          <textarea
+            rows={4}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Type notes here…"
+            className="mt-4 w-full rounded-2xl border-2 border-[var(--color-orange-deep)] bg-transparent px-4 py-3 text-sm text-[var(--color-ink)] outline-none focus-visible:border-[var(--color-orange)]"
+          />
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-[var(--color-orange-deep)] px-6 py-14 text-[var(--color-cream)]">
+        <div className="mx-auto grid max-w-4xl grid-cols-1 items-center gap-10 sm:grid-cols-2">
+          <RobotDelivery className="mx-auto h-48 w-auto" />
+          <div>
+            <p className="text-sm font-semibold text-[var(--color-yellow)]">
+              Thank you for stopping by !!
+            </p>
+            <h3 className="display mt-4 text-base font-bold">Main office</h3>
+            <address className="mt-2 space-y-1 text-sm not-italic text-[#ffe9c2]">
+              <p>Mulawin St. 5, Cupang Pandi, Bulacan</p>
+              <p>Phone: 0931 144 8575</p>
+              <p>Email: lealenefajardo20@gmail.com</p>
+            </address>
+            <h3 className="display mt-6 text-base font-bold">Get social</h3>
+            <div className="mt-3 flex gap-3">
+              {[IconFacebook, IconTwitter, IconInstagram].map((Icon, i) => (
+                <a
+                  key={i}
+                  href="#"
+                  aria-label="Social link"
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-cream)] text-[var(--color-orange-deep)] transition hover:bg-[var(--color-yellow)]"
+                >
+                  <Icon />
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      {showCardModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowCardModal(false);
+            }
+          }}
+        >
+          <div className="w-full max-w-md rounded-3xl border-2 border-[var(--color-orange-deep)] bg-[var(--color-cream)] p-6 text-center shadow-2xl">
+            <h2 className="display text-xl font-extrabold text-[var(--color-orange)]">
+              Create a new page
+            </h2>
+            <p className="mt-2 text-xs text-[var(--color-ink-soft)]">
+              Enter a title for your new page. It will appear as a new card.
+            </p>
+
+            <label
+              htmlFor="new-card-title"
+              className="mt-5 block text-left text-xs font-bold text-[var(--color-orange-deep)]"
+            >
+              Page title
+            </label>
+            <input
+              id="new-card-title"
+              type="text"
+              value={cardTitle}
+              onChange={(e) => setCardTitle(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleFinishCreateCard();
+                }
+              }}
+              placeholder="My New Page"
+              autoFocus
+              className="mt-2 w-full rounded-2xl border-2 border-[var(--color-orange-deep)] bg-transparent px-4 py-3 text-sm text-[var(--color-ink)] outline-none focus-visible:border-[var(--color-orange)]"
+            />
+
+            <div className="mt-5 flex items-center justify-center gap-4 text-xs font-bold">
+              <label className="flex items-center gap-2 text-[var(--color-orange-deep)]">
+                <input
+                  type="radio"
+                  name="new-card-section"
+                  value="new"
+                  checked={cardSection === "new"}
+                  onChange={() => setCardSection("new")}
+                />
+                New UI uploaded
+              </label>
+              <label className="flex items-center gap-2 text-[var(--color-orange-deep)]">
+                <input
+                  type="radio"
+                  name="new-card-section"
+                  value="apps"
+                  checked={cardSection === "apps"}
+                  onChange={() => setCardSection("apps")}
+                />
+                Apps UI design
+              </label>
+            </div>
+
+            <div className="mt-6 flex items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => setShowCardModal(false)}
+                className="rounded-full border-2 border-[var(--color-orange-deep)] px-6 py-2 text-xs font-bold text-[var(--color-orange-deep)] transition hover:-translate-y-0.5"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleFinishCreateCard}
+                disabled={creatingCard}
+                className="rounded-full bg-[var(--color-orange-deep)] px-6 py-2 text-xs font-bold text-[var(--color-cream)] shadow-[0_3px_0_0_var(--color-orange)] transition hover:-translate-y-0.5 active:translate-y-0 active:shadow-none disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {creatingCard ? "Working…" : "Finish / Upload"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </main>
+  );
+}

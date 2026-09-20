@@ -1,0 +1,20 @@
+[
+  {
+    "id": "c10e7984-c88e-401f-9263-678f07ab8cce",
+    "name": "Admin",
+    "email": "admin@cupangpandi.com",
+    "passwordHash": "2fd080f0c0d4af7d037acaac6ec413933927880efe1aa83054f8b182c3d927c90cc8361faaa1266a0bd39339efc2b5f4894bc673c39d772e353324f7c27abda5",
+    "salt": "8b88792f303a810d5d7a8c5191e00b32",
+    "role": "admin",
+    "createdAt": "2026-09-20T11:46:15.690Z"
+  },
+  {
+    "id": "7701f902-e7b5-45ec-b4e0-656da9f94fbb",
+    "name": "lealene S fajardo",
+    "email": "lealenefajardo20@gmail.com",
+    "passwordHash": "b00349b0e1f3683a548ee8e0e26de37a1b4746b0c2a6c51aed4bb37221052e009fd7caf4ca63d4869bfac8fa1580bbd6c179bd5bc1bbf22179c40b6b04826737",
+    "salt": "8e99fc12d64798155517a09512d8fa8c",
+    "role": "user",
+    "createdAt": "2026-09-20T11:46:15.757Z"
+  }
+]
