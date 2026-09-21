@@ -202,6 +202,28 @@ const testimonials = [
 export default function Page() {
   return (
     <main className="min-h-screen bg-[var(--color-cream)]">
+      {/* Top bar */}
+      <header className="flex items-center justify-end gap-6 border-b-2 border-[var(--color-ink)]/10 bg-[var(--color-yellow)] px-6 py-2 text-xs">
+        <a
+          href="/"
+          className="font-semibold text-[var(--color-ink-soft)] hover:text-[var(--color-ink)]"
+        >
+          Home
+        </a>
+        <a
+          href="#contact"
+          className="font-semibold text-[var(--color-ink-soft)] hover:text-[var(--color-ink)]"
+        >
+          Contact
+        </a>
+        <a
+          href="/api/logout"
+          className="rounded-full bg-[var(--color-orange-deep)] px-4 py-1.5 font-bold text-white transition hover:brightness-110"
+        >
+          Logout
+        </a>
+      </header>
+
       {/* Hero */}
       <section className="relative overflow-hidden bg-[var(--color-cream)]">
         <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-6 py-20 md:grid-cols-2 md:py-28">

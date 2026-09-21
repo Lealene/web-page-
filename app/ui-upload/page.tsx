@@ -161,16 +161,18 @@ export default async function UiUploadPage() {
       <LiveRefresh />
       {/* Top bar */}
       <header className="flex items-center justify-end gap-6 border-b-2 border-[var(--color-ink)]/10 bg-[var(--color-yellow)] px-6 py-2 text-xs">
-        <Link href="/" className="text-[var(--color-ink-soft)] hover:text-[var(--color-ink)]">
-          Page 1
+        <Link href="/" className="font-semibold text-[var(--color-ink-soft)] hover:text-[var(--color-ink)]">
+          Home
         </Link>
-        <Link href="/login" className="text-[var(--color-ink-soft)] hover:text-[var(--color-ink)]">
-          Page 2
-        </Link>
-        <span className="font-bold text-[var(--color-ink)]">Page 3</span>
-        <Link href="/admin" className="text-[var(--color-ink-soft)] hover:text-[var(--color-ink)]">
-          Page 4
-        </Link>
+        <a href="#contact" className="font-semibold text-[var(--color-ink-soft)] hover:text-[var(--color-ink)]">
+          Contact
+        </a>
+        <a
+          href="/api/logout"
+          className="rounded-full bg-[var(--color-orange-deep)] px-4 py-1.5 font-bold text-white transition hover:brightness-110"
+        >
+          Logout
+        </a>
       </header>
 
       {/* Hero */}
@@ -226,7 +228,7 @@ export default async function UiUploadPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-[var(--color-orange-deep)] px-6 py-14 text-[var(--color-cream)]">
+      <footer id="contact" className="bg-[var(--color-orange-deep)] px-6 py-14 text-[var(--color-cream)]">
         <div className="mx-auto grid max-w-4xl grid-cols-1 items-center gap-10 sm:grid-cols-2">
           <RobotDelivery className="mx-auto h-48 w-auto" />
           <div>

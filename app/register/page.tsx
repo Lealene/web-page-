@@ -148,10 +148,24 @@ export default function RegisterPage() {
   return (
     <main className="flex min-h-screen flex-col bg-[var(--color-cream)]">
       {/* Top bar */}
-      <header className="flex items-center border-b-2 border-[var(--color-ink)]/20 bg-[var(--color-yellow)] px-6 py-3">
+      <header className="flex items-center justify-between border-b-2 border-[var(--color-ink)]/20 bg-[var(--color-yellow)] px-6 py-3">
         <Link href="/" aria-label="Home">
           <Logo />
         </Link>
+        <nav className="flex items-center gap-6 text-xs">
+          <Link href="/" className="font-semibold text-[var(--color-ink-soft)] hover:text-[var(--color-ink)]">
+            Home
+          </Link>
+          <a href="#contact" className="font-semibold text-[var(--color-ink-soft)] hover:text-[var(--color-ink)]">
+            Contact
+          </a>
+          <a
+            href="/api/logout"
+            className="rounded-full bg-[var(--color-orange-deep)] px-4 py-1.5 font-bold text-white transition hover:brightness-110"
+          >
+            Logout
+          </a>
+        </nav>
       </header>
 
       {/* Register card */}
@@ -291,7 +305,7 @@ export default function RegisterPage() {
       </div>
 
       {/* Footer / contact */}
-      <footer className="bg-[var(--color-orange-deep)] text-[var(--color-cream)]">
+      <footer id="contact" className="bg-[var(--color-orange-deep)] text-[var(--color-cream)]">
         <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-6 py-14 md:grid-cols-2 md:py-16">
           <RobotDelivery className="mx-auto h-40 w-auto md:h-56" />
           <div>
