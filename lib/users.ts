@@ -11,6 +11,10 @@ import {
   writeFileSync,
 } from "node:fs";
 import path from "node:path";
+import {
+  getWritableDataPath,
+  getDataPathForRead,
+} from "./data-dir";
 
 export type UserRole = "admin" | "user";
 
@@ -35,14 +39,21 @@ export type SafeUser = {
 export const DEFAULT_ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "admin@cupangpandi.com";
 export const DEFAULT_ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "admin123";
 
-const usersFile = path.join(process.cwd(), "data", "users.json");
+function usersFileWritable(): string {
+  return getWritableDataPath("users.json");
+}
+
+function usersFileForRead(): string {
+  return getDataPathForRead("users.json");
+}
 
 function loadUsers(): User[] {
-  if (!existsSync(usersFile)) {
+  const file = usersFileForRead();
+  if (!existsSync(file)) {
     return [];
   }
   try {
-    const parsed: unknown = JSON.parse(readFileSync(usersFile, "utf8"));
+    const parsed: unknown = JSON.parse(readFileSync(file, "utf8"));
     return Array.isArray(parsed) ? (parsed as User[]) : [];
   } catch {
     return [];
@@ -50,8 +61,21 @@ function loadUsers(): User[] {
 }
 
 function saveUsers(users: User[]): void {
-  mkdirSync(path.dirname(usersFile), { recursive: true });
-  writeFileSync(usersFile, JSON.stringify(users, null, 2), "utf8");
+  const file = usersFileWritable();
+  // Ensure writable dir exists; if EROFS on cwd, this goes to /tmp
+  try {
+    mkdirSync(path.dirname(file), { recursive: true });
+    writeFileSync(file, JSON.stringify(users, null, 2), "utf8");
+  } catch (err) {
+    // Final fallback: try /tmp directly
+    if ((err as NodeJS.ErrnoException)?.code === "EROFS" || (err as Error)?.message?.includes("read-only")) {
+      const fallback = path.join("/tmp", "data", "users.json");
+      mkdirSync(path.dirname(fallback), { recursive: true });
+      writeFileSync(fallback, JSON.stringify(users, null, 2), "utf8");
+    } else {
+      throw err;
+    }
+  }
 }
 
 function hashPassword(password: string, salt = randomBytes(16).toString("hex")): {

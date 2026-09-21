@@ -11,6 +11,10 @@ import {
   APPS_UI_SLOTS,
   type UploadSlot,
 } from "./upload-slots";
+import {
+  getWritableDataPath,
+  getDataPathForRead,
+} from "./data-dir";
 
 export type CardSection = "new" | "apps";
 
@@ -21,14 +25,21 @@ export interface CustomCard {
   createdAt: string;
 }
 
-const cardsFile = path.join(process.cwd(), "data", "cards.json");
+function cardsFileWritable(): string {
+  return getWritableDataPath("cards.json");
+}
+
+function cardsFileForRead(): string {
+  return getDataPathForRead("cards.json");
+}
 
 function loadCards(): CustomCard[] {
-  if (!existsSync(cardsFile)) {
+  const file = cardsFileForRead();
+  if (!existsSync(file)) {
     return [];
   }
   try {
-    const parsed: unknown = JSON.parse(readFileSync(cardsFile, "utf8"));
+    const parsed: unknown = JSON.parse(readFileSync(file, "utf8"));
     return Array.isArray(parsed) ? (parsed as CustomCard[]) : [];
   } catch {
     return [];
@@ -36,8 +47,19 @@ function loadCards(): CustomCard[] {
 }
 
 function saveCards(cards: CustomCard[]): void {
-  mkdirSync(path.dirname(cardsFile), { recursive: true });
-  writeFileSync(cardsFile, JSON.stringify(cards, null, 2), "utf8");
+  const file = cardsFileWritable();
+  try {
+    mkdirSync(path.dirname(file), { recursive: true });
+    writeFileSync(file, JSON.stringify(cards, null, 2), "utf8");
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException)?.code === "EROFS" || (err as Error)?.message?.includes("read-only")) {
+      const fallback = path.join("/tmp", "data", "cards.json");
+      mkdirSync(path.dirname(fallback), { recursive: true });
+      writeFileSync(fallback, JSON.stringify(cards, null, 2), "utf8");
+    } else {
+      throw err;
+    }
+  }
 }
 
 export function listCustomCards(): CustomCard[] {

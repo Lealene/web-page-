@@ -12,11 +12,57 @@ import {
   type UploadedFile,
 } from "./upload-slots";
 import { isKnownUploadSlot } from "./card-slots";
+import {
+  getWritableDataPath,
+  getDataPathForRead,
+} from "./data-dir";
 
-const uploadsDir = path.join(process.cwd(), "data", "uploads");
+function uploadsDirWritable(): string {
+  return getWritableDataPath("uploads");
+}
+
+function uploadsDirForRead(slotId?: string): string {
+  // Prefer writable; fallback to bundled if writable missing
+  const writable = slotId ? getWritableDataPath("uploads", slotId) : getWritableDataPath("uploads");
+  if (existsSync(writable)) return getWritableDataPath("uploads");
+  const bundled = path.join(process.cwd(), "data", "uploads");
+  if (existsSync(bundled)) return bundled;
+  return writable;
+}
+
+function getUploadsBase(): string {
+  return uploadsDirWritable();
+}
 
 function slotDir(slotId: string): string {
-  return path.join(uploadsDir, slotId);
+  return path.join(getUploadsBase(), slotId);
+}
+
+function slotDirForRead(slotId: string): string {
+  const writable = path.join(getWritableDataPath("uploads"), slotId);
+  if (existsSync(writable)) return writable;
+  const bundled = path.join(process.cwd(), "data", "uploads", slotId);
+  if (existsSync(bundled)) return bundled;
+  return writable;
+}
+
+function resolveSlotPathForRead(slotId: string, relPath: string): string | null {
+  // try writable first, then bundled
+  const writableBase = path.join(getWritableDataPath("uploads"), slotId);
+  const bundledBase = path.join(process.cwd(), "data", "uploads", slotId);
+  for (const base of [writableBase, bundledBase]) {
+    const segments = relPath
+      .split("/")
+      .filter((s) => s.length > 0)
+      .map(cleanSegment)
+      .filter((s) => s.length > 0 && s !== "." && s !== "..");
+    if (segments.length === 0) continue;
+    const full = path.join(base, ...segments);
+    if (!full.startsWith(base)) continue;
+    if (existsSync(full)) return full;
+  }
+  // fallback to writable path (for creation checks)
+  return resolveSlotPath(slotId, relPath);
 }
 
 function cleanSegment(segment: string): string {
@@ -88,7 +134,16 @@ export async function saveSlotItems(
     return [];
   }
   const base = slotDir(slotId);
-  mkdirSync(base, { recursive: true });
+  try {
+    mkdirSync(base, { recursive: true });
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException)?.code === "EROFS" || (err as Error)?.message?.includes("read-only")) {
+      const fallback = path.join("/tmp", "data", "uploads", slotId);
+      mkdirSync(fallback, { recursive: true });
+    } else {
+      throw err;
+    }
+  }
 
   const saved: UploadedFile[] = [];
   for (const item of items) {
@@ -102,8 +157,20 @@ export async function saveSlotItems(
     if (!full.startsWith(base)) {
       continue;
     }
-    mkdirSync(path.dirname(full), { recursive: true });
-    writeFileSync(full, Buffer.from(await item.file.arrayBuffer()));
+    const buffer = Buffer.from(await item.file.arrayBuffer());
+    try {
+      mkdirSync(path.dirname(full), { recursive: true });
+      writeFileSync(full, buffer);
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException)?.code === "EROFS" || (err as Error)?.message?.includes("read-only")) {
+        const fallbackBase = path.join("/tmp", "data", "uploads", slotId);
+        const fallbackFull = path.join(fallbackBase, ...dirParts, name);
+        mkdirSync(path.dirname(fallbackFull), { recursive: true });
+        writeFileSync(fallbackFull, buffer);
+      } else {
+        throw err;
+      }
+    }
     saved.push({
       name,
       size: item.file.size,
@@ -117,42 +184,68 @@ export function listSlotEntries(
   slotId: string,
   relPath = ""
 ): SlotEntry[] {
-  const base = slotDir(slotId);
-  const dir = relPath
-    ? (resolveSlotPath(slotId, relPath) ?? "")
-    : base;
-  if (!dir || !existsSync(dir)) {
-    return [];
+  // Collect dirs to read: writable and bundled (for EROFS fallback + seeded data)
+  const dirs: string[] = [];
+  if (relPath) {
+    const writableFull = resolveSlotPath(slotId, relPath);
+    const readFallback = resolveSlotPathForRead(slotId, relPath);
+    if (writableFull) dirs.push(writableFull);
+    if (readFallback && readFallback !== writableFull) dirs.push(readFallback);
+    // also check bundled directly if fallback didn't find
+    const bundledFull = path.join(process.cwd(), "data", "uploads", slotId, ...relPath.split("/").map(cleanSegment).filter(Boolean));
+    if (existsSync(bundledFull) && !dirs.includes(bundledFull)) dirs.push(bundledFull);
+  } else {
+    const writableBase = slotDir(slotId);
+    const bundledBase = path.join(process.cwd(), "data", "uploads", slotId);
+    if (existsSync(writableBase)) dirs.push(writableBase);
+    if (existsSync(bundledBase) && !dirs.includes(bundledBase)) dirs.push(bundledBase);
+    if (dirs.length === 0) {
+      // No dir exists yet, fallback to writable for empty result
+      return [];
+    }
   }
-  try {
-    return readdirSync(dir, { withFileTypes: true })
-      .map((entry) => {
-        const clean = cleanSegment(entry.name);
-        if (!clean || clean === "." || clean === "..") {
-          return null;
+
+  const seen = new Set<string>();
+  const combined: SlotEntry[] = [];
+  for (const dir of dirs) {
+    if (!existsSync(dir)) continue;
+    try {
+      const entries = readdirSync(dir, { withFileTypes: true })
+        .map((entry) => {
+          const clean = cleanSegment(entry.name);
+          if (!clean || clean === "." || clean === "..") {
+            return null;
+          }
+          const entryRel = relPath ? `${relPath}/${clean}` : clean;
+          const url =
+            entry.isDirectory()
+              ? `/ui-upload/${slotId}/${encodedRelPath(entryRel)}`
+              : `/api/uploads/${slotId}/${encodedRelPath(entryRel)}`;
+          return {
+            type: entry.isDirectory() ? ("folder" as const) : ("file" as const),
+            name: entry.name,
+            relPath: entryRel,
+            url,
+          };
+        })
+        .filter((entry): entry is SlotEntry => entry !== null);
+      for (const e of entries) {
+        if (!seen.has(e.relPath)) {
+          seen.add(e.relPath);
+          combined.push(e);
         }
-        const entryRel = relPath ? `${relPath}/${clean}` : clean;
-        const url =
-          entry.isDirectory()
-            ? `/ui-upload/${slotId}/${encodedRelPath(entryRel)}`
-            : `/api/uploads/${slotId}/${encodedRelPath(entryRel)}`;
-        return {
-          type: entry.isDirectory() ? ("folder" as const) : ("file" as const),
-          name: entry.name,
-          relPath: entryRel,
-          url,
-        };
-      })
-      .filter((entry): entry is SlotEntry => entry !== null)
-      .sort((a, b) => {
-        if (a.type !== b.type) {
-          return a.type === "folder" ? -1 : 1;
-        }
-        return a.name.localeCompare(b.name);
-      });
-  } catch {
-    return [];
+      }
+    } catch {
+      // ignore this dir
+    }
   }
+
+  return combined.sort((a, b) => {
+    if (a.type !== b.type) {
+      return a.type === "folder" ? -1 : 1;
+    }
+    return a.name.localeCompare(b.name);
+  });
 }
 
 export function readUploadedFile(
@@ -162,18 +255,25 @@ export function readUploadedFile(
   if (!isKnownUploadSlot(slotId)) {
     return null;
   }
-  const full = resolveSlotPath(slotId, relPath);
-  if (!full || !existsSync(full)) {
-    return null;
+  const candidates = [
+    resolveSlotPath(slotId, relPath),
+    resolveSlotPathForRead(slotId, relPath),
+    path.join(process.cwd(), "data", "uploads", slotId, ...relPath.split("/").map(cleanSegment).filter(Boolean)),
+  ].filter((p): p is string => !!p);
+  for (const full of candidates) {
+    if (!existsSync(full)) continue;
+    try {
+      const stats = statSync(full);
+      if (!stats.isFile()) continue;
+      return {
+        content: readFileSync(full),
+        mimeType: mimeTypeFor(relPath),
+      };
+    } catch {
+      continue;
+    }
   }
-  const stats = statSync(full);
-  if (!stats.isFile()) {
-    return null;
-  }
-  return {
-    content: readFileSync(full),
-    mimeType: mimeTypeFor(relPath),
-  };
+  return null;
 }
 
 function mimeTypeFor(name: string): string {
@@ -219,18 +319,36 @@ export function deleteUploadedEntry(
   if (!isKnownUploadSlot(slotId)) {
     return { ok: false, error: "Unknown upload folder." };
   }
-  const full = resolveSlotPath(slotId, relPath);
+  const candidates = [
+    resolveSlotPath(slotId, relPath),
+    resolveSlotPathForRead(slotId, relPath),
+    path.join(process.cwd(), "data", "uploads", slotId, ...relPath.split("/").map(cleanSegment).filter(Boolean)),
+  ].filter((p): p is string => !!p);
+  const existing = candidates.find((p) => existsSync(p));
+  if (!existing) {
+    return { ok: false, error: "That file no longer exists." };
+  }
+  // Prefer writable candidate if it exists, otherwise first existing
+  const full = candidates.find((p) => p.startsWith(getWritableDataPath("uploads")) && existsSync(p)) ?? existing;
   if (!full) {
     return { ok: false, error: "Invalid path." };
-  }
-  if (!existsSync(full)) {
-    return { ok: false, error: "That file no longer exists." };
   }
   try {
     const stats = statSync(full);
     rmSync(full, { recursive: true, force: true });
     return { ok: true, type: stats.isDirectory() ? "folder" : "file" };
   } catch (err) {
+    // If EROFS, try fallback writable path via /tmp
+    if ((err as NodeJS.ErrnoException)?.code === "EROFS" || (err as Error)?.message?.includes("read-only")) {
+      const fallback = path.join("/tmp", "data", "uploads", slotId, ...relPath.split("/").map(cleanSegment).filter(Boolean));
+      if (existsSync(fallback)) {
+        try {
+          const stats = statSync(fallback);
+          rmSync(fallback, { recursive: true, force: true });
+          return { ok: true, type: stats.isDirectory() ? "folder" : "file" };
+        } catch {}
+      }
+    }
     return {
       ok: false,
       error: err instanceof Error ? err.message : "Couldn't delete that file.",
@@ -242,22 +360,30 @@ export function clearSlot(slotId: string): { ok: boolean; deleted: number; error
   if (!isKnownUploadSlot(slotId)) {
     return { ok: false, deleted: 0, error: "Unknown upload folder." };
   }
-  const base = slotDir(slotId);
-  if (!existsSync(base)) {
-    return { ok: true, deleted: 0 };
-  }
+  // Clear both writable and bundled (but bundled may be read-only, so ignore EROFS)
+  const bases = [
+    slotDir(slotId),
+    path.join(process.cwd(), "data", "uploads", slotId),
+    path.join("/tmp", "data", "uploads", slotId),
+  ];
   let deleted = 0;
-  try {
-    for (const child of readdirSync(base)) {
-      rmSync(path.join(base, child), { recursive: true, force: true });
-      deleted += 1;
+  let lastError: string | undefined;
+  for (const base of bases) {
+    if (!existsSync(base)) continue;
+    try {
+      for (const child of readdirSync(base)) {
+        rmSync(path.join(base, child), { recursive: true, force: true });
+        deleted += 1;
+      }
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException)?.code === "EROFS" || (err as Error)?.message?.includes("read-only")) {
+        continue; // skip read-only bundled
+      }
+      lastError = err instanceof Error ? err.message : "Couldn't empty that box.";
     }
-    return { ok: true, deleted };
-  } catch (err) {
-    return {
-      ok: false,
-      deleted,
-      error: err instanceof Error ? err.message : "Couldn't empty that box.",
-    };
   }
+  if (lastError && deleted === 0) {
+    return { ok: false, deleted, error: lastError };
+  }
+  return { ok: true, deleted };
 }

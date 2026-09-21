@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { getWritableDataPath, getDataPathForRead } from "./data-dir";
 
 export type FeedbackEntry = {
   id: string;
@@ -11,12 +12,19 @@ export type FeedbackEntry = {
   createdAt: string;
 };
 
-const feedbackFile = path.join(process.cwd(), "data", "feedback.json");
+function feedbackFileWritable(): string {
+  return getWritableDataPath("feedback.json");
+}
+
+function feedbackFileForRead(): string {
+  return getDataPathForRead("feedback.json");
+}
 
 function load(): FeedbackEntry[] {
-  if (!existsSync(feedbackFile)) return [];
+  const file = feedbackFileForRead();
+  if (!existsSync(file)) return [];
   try {
-    const raw = readFileSync(feedbackFile, "utf8");
+    const raw = readFileSync(file, "utf8");
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
     return parsed as FeedbackEntry[];
@@ -26,8 +34,19 @@ function load(): FeedbackEntry[] {
 }
 
 function save(entries: FeedbackEntry[]) {
-  mkdirSync(path.dirname(feedbackFile), { recursive: true });
-  writeFileSync(feedbackFile, JSON.stringify(entries, null, 2), "utf8");
+  const file = feedbackFileWritable();
+  try {
+    mkdirSync(path.dirname(file), { recursive: true });
+    writeFileSync(file, JSON.stringify(entries, null, 2), "utf8");
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException)?.code === "EROFS" || (err as Error)?.message?.includes("read-only")) {
+      const fallback = path.join("/tmp", "data", "feedback.json");
+      mkdirSync(path.dirname(fallback), { recursive: true });
+      writeFileSync(fallback, JSON.stringify(entries, null, 2), "utf8");
+    } else {
+      throw err;
+    }
+  }
 }
 
 export function listFeedback(): FeedbackEntry[] {
