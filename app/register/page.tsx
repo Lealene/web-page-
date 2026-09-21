@@ -2,40 +2,8 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
-
-function RobotMascot({ className = "" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 140 170" className={className} fill="none">
-      <path d="M70 22V6" stroke="#2B5566" strokeWidth="4" strokeLinecap="round" />
-      <circle cx="70" cy="6" r="4" fill="#F7941D" stroke="#2B5566" strokeWidth="2" />
-      <rect x="30" y="24" width="80" height="78" rx="24" fill="#A8DDE8" stroke="#2B5566" strokeWidth="4" />
-      <circle cx="55" cy="60" r="8" fill="#fff" stroke="#2B5566" strokeWidth="3" />
-      <circle cx="55" cy="60" r="2.8" fill="#2B5566" />
-      <circle cx="85" cy="60" r="8" fill="#fff" stroke="#2B5566" strokeWidth="3" />
-      <circle cx="85" cy="60" r="2.8" fill="#2B5566" />
-      <path d="M58 82q12 8 24 0" stroke="#2B5566" strokeWidth="3.5" strokeLinecap="round" fill="none" />
-      <rect x="55" y="100" width="30" height="42" rx="11" fill="#A8DDE8" stroke="#2B5566" strokeWidth="4" />
-      <rect x="47" y="138" width="16" height="30" rx="6" fill="#A8DDE8" stroke="#2B5566" strokeWidth="4" />
-      <rect x="77" y="138" width="16" height="30" rx="6" fill="#A8DDE8" stroke="#2B5566" strokeWidth="4" />
-    </svg>
-  );
-}
-
-function RobotDelivery({ className = "" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 260 320" className={className} fill="none">
-      <path d="M170 40 L190 15 M195 25 L215 20" stroke="#2B5566" strokeWidth="6" strokeLinecap="round" />
-      <rect x="90" y="50" width="130" height="145" rx="30" fill="#A8DDE8" stroke="#2B5566" strokeWidth="5" />
-      <circle cx="90" cy="115" r="14" fill="#fff" stroke="#2B5566" strokeWidth="4" />
-      <circle cx="90" cy="115" r="5" fill="#2B5566" />
-      <path d="M135 108 Q150 118 165 108" stroke="#2B5566" strokeWidth="5" strokeLinecap="round" fill="none" />
-      <rect x="135" y="195" width="46" height="65" rx="16" fill="#A8DDE8" stroke="#2B5566" strokeWidth="5" />
-      <rect x="122" y="260" width="24" height="50" rx="9" fill="#A8DDE8" stroke="#2B5566" strokeWidth="5" />
-      <rect x="170" y="260" width="24" height="50" rx="9" fill="#A8DDE8" stroke="#2B5566" strokeWidth="5" />
-      <path d="M95 150 L35 175 L55 210 L110 185 Z" fill="#F7941D" stroke="#2B5566" strokeWidth="5" strokeLinejoin="round" />
-    </svg>
-  );
-}
+import Robot3D from "@/components/robot-3d";
+import ScrollReveal from "@/components/scroll-reveal";
 
 function Logo() {
   return (
@@ -88,7 +56,7 @@ function SocialLink({ label, children }: { label: string; children: React.ReactN
     <a
       href="#"
       aria-label={label}
-      className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-cream)] transition hover:bg-[var(--color-yellow)]"
+      className="btn-pop flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-cream)] hover:bg-[var(--color-yellow)]"
     >
       {children}
     </a>
@@ -119,8 +87,6 @@ export default function RegisterPage() {
 
     setSubmitting(true);
     try {
-      // Replace this block with a real request to your auth/register endpoint,
-      // e.g. POST /api/register with { name, email, password }.
       const res = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -161,7 +127,7 @@ export default function RegisterPage() {
           </a>
           <a
             href="/api/logout"
-            className="rounded-full bg-[var(--color-orange-deep)] px-4 py-1.5 font-bold text-white transition hover:brightness-110"
+            className="btn-pop rounded-full bg-[var(--color-orange-deep)] px-4 py-1.5 font-bold text-white"
           >
             Logout
           </a>
@@ -169,170 +135,178 @@ export default function RegisterPage() {
       </header>
 
       {/* Register card */}
-      <div className="flex flex-1 items-center justify-center px-4 py-12 sm:py-16">
+      <div className="bg-aurora flex flex-1 items-center justify-center px-4 py-12 sm:py-16">
         <div className="w-full max-w-md text-center">
-          <h1 className="display text-5xl font-extrabold text-[var(--color-orange)] sm:text-6xl">
-            Hi, welcome
-          </h1>
+          <ScrollReveal direction="scale">
+            <h1 className="display text-5xl font-extrabold text-[var(--color-orange)] sm:text-6xl">
+              Hi, welcome
+            </h1>
+          </ScrollReveal>
 
-          <form
-            onSubmit={handleSubmit}
-            noValidate
-            className="mx-auto mt-8 w-full max-w-md rounded-3xl border-2 border-[var(--color-orange)] bg-[var(--color-cream)] px-8 py-8 text-left shadow-sm sm:px-10"
-          >
-            <div className="space-y-5">
-              <div>
-                <label
-                  htmlFor="name"
-                  className="block text-xs font-bold uppercase tracking-wide text-[var(--color-orange-deep)]"
-                >
-                  Name
-                </label>
-                <input
-                  id="name"
-                  type="text"
-                  autoComplete="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="mt-1.5 w-full rounded-full border-2 border-[var(--color-orange)] bg-transparent px-4 py-2.5 text-sm text-[var(--color-ink)] outline-none focus-visible:border-[var(--color-orange-deep)]"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="email"
-                  className="block text-xs font-bold uppercase tracking-wide text-[var(--color-orange-deep)]"
-                >
-                  Email:
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="mt-1.5 w-full rounded-full border-2 border-[var(--color-orange)] bg-transparent px-4 py-2.5 text-sm text-[var(--color-ink)] outline-none focus-visible:border-[var(--color-orange-deep)]"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="password"
-                  className="block text-xs font-bold uppercase tracking-wide text-[var(--color-orange-deep)]"
-                >
-                  Password
-                </label>
-                <input
-                  id="password"
-                  type="password"
-                  autoComplete="new-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="mt-1.5 w-full rounded-full border-2 border-[var(--color-orange)] bg-transparent px-4 py-2.5 text-sm text-[var(--color-ink)] outline-none focus-visible:border-[var(--color-orange-deep)]"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="repeatPassword"
-                  className="block text-xs font-bold uppercase tracking-wide text-[var(--color-orange-deep)]"
-                >
-                  Repeat password
-                </label>
-                <input
-                  id="repeatPassword"
-                  type="password"
-                  autoComplete="new-password"
-                  value={repeatPassword}
-                  onChange={(e) => setRepeatPassword(e.target.value)}
-                  className="mt-1.5 w-full rounded-full border-2 border-[var(--color-orange)] bg-transparent px-4 py-2.5 text-sm text-[var(--color-ink)] outline-none focus-visible:border-[var(--color-orange-deep)]"
-                />
-              </div>
-            </div>
-
-            {error && (
-              <p role="alert" className="mt-4 text-center text-xs font-semibold text-[#b3261e]">
-                {error}
-              </p>
-            )}
-
-            <button
-              type="submit"
-              disabled={submitting}
-              className="mx-auto mt-6 block rounded-full bg-[var(--color-yellow)] px-12 py-3 text-base font-extrabold text-[var(--color-orange-deep)] shadow-[0_3px_0_0_var(--color-orange)] transition hover:-translate-y-0.5 active:translate-y-0 active:shadow-none disabled:cursor-not-allowed disabled:opacity-60"
+          <ScrollReveal direction="up" delay={100}>
+            <form
+              onSubmit={handleSubmit}
+              noValidate
+              className="glass-card mx-auto mt-8 w-full max-w-md rounded-3xl border-2 border-[var(--color-orange)] bg-[var(--color-cream)]/80 px-8 py-8 text-left shadow-sm sm:px-10"
             >
-              {submitting ? "Registering…" : "Register"}
-            </button>
+              <div className="space-y-5">
+                <div>
+                  <label
+                    htmlFor="name"
+                    className="block text-xs font-bold uppercase tracking-wide text-[var(--color-orange-deep)]"
+                  >
+                    Name
+                  </label>
+                  <input
+                    id="name"
+                    type="text"
+                    autoComplete="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="mt-1.5 w-full rounded-full border-2 border-[var(--color-orange)] bg-transparent px-4 py-2.5 text-sm text-[var(--color-ink)] outline-none transition focus-visible:border-[var(--color-orange-deep)] focus-visible:shadow-[0_0_0_4px_rgba(247,148,29,0.25)]"
+                  />
+                </div>
 
-            <p className="mt-5 text-center text-sm text-[var(--color-ink-soft)]">
-              Already have an account?{" "}
-              <Link
-                href="/login"
-                className="font-semibold text-[var(--color-orange-deep)] underline-offset-2 hover:underline"
+                <div>
+                  <label
+                    htmlFor="email"
+                    className="block text-xs font-bold uppercase tracking-wide text-[var(--color-orange-deep)]"
+                  >
+                    Email:
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="mt-1.5 w-full rounded-full border-2 border-[var(--color-orange)] bg-transparent px-4 py-2.5 text-sm text-[var(--color-ink)] outline-none transition focus-visible:border-[var(--color-orange-deep)] focus-visible:shadow-[0_0_0_4px_rgba(247,148,29,0.25)]"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="password"
+                    className="block text-xs font-bold uppercase tracking-wide text-[var(--color-orange-deep)]"
+                  >
+                    Password
+                  </label>
+                  <input
+                    id="password"
+                    type="password"
+                    autoComplete="new-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="mt-1.5 w-full rounded-full border-2 border-[var(--color-orange)] bg-transparent px-4 py-2.5 text-sm text-[var(--color-ink)] outline-none transition focus-visible:border-[var(--color-orange-deep)] focus-visible:shadow-[0_0_0_4px_rgba(247,148,29,0.25)]"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="repeatPassword"
+                    className="block text-xs font-bold uppercase tracking-wide text-[var(--color-orange-deep)]"
+                  >
+                    Repeat password
+                  </label>
+                  <input
+                    id="repeatPassword"
+                    type="password"
+                    autoComplete="new-password"
+                    value={repeatPassword}
+                    onChange={(e) => setRepeatPassword(e.target.value)}
+                    className="mt-1.5 w-full rounded-full border-2 border-[var(--color-orange)] bg-transparent px-4 py-2.5 text-sm text-[var(--color-ink)] outline-none transition focus-visible:border-[var(--color-orange-deep)] focus-visible:shadow-[0_0_0_4px_rgba(247,148,29,0.25)]"
+                  />
+                </div>
+              </div>
+
+              {error && (
+                <p role="alert" className="mt-4 text-center text-xs font-semibold text-[#b3261e]">
+                  {error}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={submitting}
+                className="btn-pop mx-auto mt-6 block rounded-full bg-[var(--color-yellow)] px-12 py-3 text-base font-extrabold text-[var(--color-orange-deep)] shadow-[0_3px_0_0_var(--color-orange)] disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Log in
-              </Link>
-            </p>
+                {submitting ? "Registering…" : "Register"}
+              </button>
 
-            <p className="mt-5 text-center text-sm font-semibold text-[var(--color-orange-deep)]">
-              Login with
-            </p>
-
-            <div className="mt-3 flex items-center justify-center gap-5">
-              <a href="#" aria-label="Continue with Facebook">
-                <IconFacebook />
-              </a>
-              <a href="#" aria-label="Continue with WhatsApp">
-                <IconWhatsapp />
-              </a>
-              <a href="#" aria-label="Continue with Gmail">
-                <IconGmail />
-              </a>
-            </div>
-
-            <RobotMascot className="mx-auto mt-4 h-24 w-auto sm:h-28" />
-
-            {submitting && (
-              <p
-                className="mt-2 text-center text-[10px] font-semibold tracking-wide text-[var(--color-orange-deep)]"
-                aria-live="polite"
-              >
-                Loading account, please wait…
+              <p className="mt-5 text-center text-sm text-[var(--color-ink-soft)]">
+                Already have an account?{" "}
+                <Link
+                  href="/login"
+                  className="font-semibold text-[var(--color-orange-deep)] underline-offset-2 hover:underline"
+                >
+                  Log in
+                </Link>
               </p>
-            )}
-          </form>
+
+              <p className="mt-5 text-center text-sm font-semibold text-[var(--color-orange-deep)]">
+                Login with
+              </p>
+
+              <div className="mt-3 flex items-center justify-center gap-5">
+                <a href="#" aria-label="Continue with Facebook" className="btn-pop">
+                  <IconFacebook />
+                </a>
+                <a href="#" aria-label="Continue with WhatsApp" className="btn-pop">
+                  <IconWhatsapp />
+                </a>
+                <a href="#" aria-label="Continue with Gmail" className="btn-pop">
+                  <IconGmail />
+                </a>
+              </div>
+
+              <Robot3D pose="thumbsup" className="mx-auto mt-4 h-24 w-auto sm:h-28" />
+
+              {submitting && (
+                <p
+                  className="mt-2 text-center text-[10px] font-semibold tracking-wide text-[var(--color-orange-deep)]"
+                  aria-live="polite"
+                >
+                  Loading account, please wait…
+                </p>
+              )}
+            </form>
+          </ScrollReveal>
         </div>
       </div>
 
       {/* Footer / contact */}
       <footer id="contact" className="bg-[var(--color-orange-deep)] text-[var(--color-cream)]">
         <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-6 py-14 md:grid-cols-2 md:py-16">
-          <RobotDelivery className="mx-auto h-40 w-auto md:h-56" />
-          <div>
-            <p className="text-sm font-semibold tracking-wide text-[var(--color-yellow)]">
-              Thanks for stopping by
-            </p>
+          <ScrollReveal direction="left">
+            <Robot3D pose="delivery" className="mx-auto h-40 w-auto md:h-56" />
+          </ScrollReveal>
+          <ScrollReveal direction="right">
+            <div>
+              <p className="text-sm font-semibold tracking-wide text-[var(--color-yellow)]">
+                Thanks for stopping by
+              </p>
 
-            <h3 className="display mt-4 text-lg font-bold">Main office</h3>
-            <address className="mt-2 space-y-1 text-sm not-italic text-[#ffe9c2]">
-              <p>Mulawin St. 5, Cupang Pandi, Bulacan</p>
-              <p>Phone: 0931 144 8575</p>
-              <p>Email: lealenefajardo20@gmail.com</p>
-            </address>
+              <h3 className="display mt-4 text-lg font-bold">Main office</h3>
+              <address className="mt-2 space-y-1 text-sm not-italic text-[#ffe9c2]">
+                <p>Mulawin St. 5, Cupang Pandi, Bulacan</p>
+                <p>Phone: 0931 144 8575</p>
+                <p>Email: lealenefajardo20@gmail.com</p>
+              </address>
 
-            <h3 className="display mt-6 text-lg font-bold">Get social</h3>
-            <div className="mt-3 flex gap-3">
-              <SocialLink label="Facebook">
-                <IconFacebook />
-              </SocialLink>
-              <SocialLink label="WhatsApp">
-                <IconWhatsapp />
-              </SocialLink>
-              <SocialLink label="Gmail">
-                <IconGmail />
-              </SocialLink>
+              <h3 className="display mt-6 text-lg font-bold">Get social</h3>
+              <div className="mt-3 flex gap-3">
+                <SocialLink label="Facebook">
+                  <IconFacebook />
+                </SocialLink>
+                <SocialLink label="WhatsApp">
+                  <IconWhatsapp />
+                </SocialLink>
+                <SocialLink label="Gmail">
+                  <IconGmail />
+                </SocialLink>
+              </div>
             </div>
-          </div>
+          </ScrollReveal>
         </div>
       </footer>
     </main>

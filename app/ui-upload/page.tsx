@@ -1,63 +1,11 @@
 import Link from "next/link";
 import { type UploadSlot } from "@/lib/upload-slots";
 import { allSlots } from "@/lib/card-slots";
-import {
-  listSlotEntries,
-  type SlotEntry,
-} from "@/lib/uploads";
+import { listSlotEntries, type SlotEntry } from "@/lib/uploads";
 import EntryRow from "@/app/ui-upload/entry-row";
 import LiveRefresh from "@/app/ui-upload/live-refresh";
-
-function RobotWaving({ className = "" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 220 260" className={className} fill="none">
-      <rect x="30" y="20" width="120" height="130" rx="28" fill="#A8DDE8" stroke="#2B5566" strokeWidth="4" />
-      <circle cx="70" cy="75" r="12" fill="#fff" stroke="#2B5566" strokeWidth="3" />
-      <circle cx="70" cy="75" r="4" fill="#2B5566" />
-      <circle cx="112" cy="75" r="12" fill="#fff" stroke="#2B5566" strokeWidth="3" />
-      <circle cx="112" cy="75" r="4" fill="#2B5566" />
-      <path d="M75 108 Q91 118 107 108" stroke="#2B5566" strokeWidth="4" strokeLinecap="round" fill="none" />
-      <rect x="70" y="150" width="42" height="60" rx="14" fill="#A8DDE8" stroke="#2B5566" strokeWidth="4" />
-      <rect x="60" y="205" width="20" height="45" rx="8" fill="#A8DDE8" stroke="#2B5566" strokeWidth="4" />
-      <rect x="102" y="205" width="20" height="45" rx="8" fill="#A8DDE8" stroke="#2B5566" strokeWidth="4" />
-      <path d="M40 100 Q10 80 20 45" stroke="#2B5566" strokeWidth="6" strokeLinecap="round" fill="none" />
-      <circle cx="20" cy="42" r="7" fill="#A8DDE8" stroke="#2B5566" strokeWidth="4" />
-    </svg>
-  );
-}
-
-function RobotBox({ className = "" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 220 260" className={className} fill="none">
-      <rect x="70" y="20" width="120" height="130" rx="28" fill="#A8DDE8" stroke="#2B5566" strokeWidth="4" />
-      <circle cx="112" cy="75" r="12" fill="#fff" stroke="#2B5566" strokeWidth="3" />
-      <circle cx="112" cy="75" r="4" fill="#2B5566" />
-      <circle cx="152" cy="75" r="12" fill="#fff" stroke="#2B5566" strokeWidth="3" />
-      <circle cx="152" cy="75" r="4" fill="#2B5566" />
-      <path d="M117 108 Q131 116 145 108" stroke="#2B5566" strokeWidth="4" strokeLinecap="round" fill="none" />
-      <rect x="112" y="150" width="42" height="60" rx="14" fill="#A8DDE8" stroke="#2B5566" strokeWidth="4" />
-      <rect x="102" y="205" width="20" height="45" rx="8" fill="#A8DDE8" stroke="#2B5566" strokeWidth="4" />
-      <rect x="144" y="205" width="20" height="45" rx="8" fill="#A8DDE8" stroke="#2B5566" strokeWidth="4" />
-      <path d="M78 105 L40 130 L20 105 L58 82 Z" fill="#F7941D" stroke="#2B5566" strokeWidth="4" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function RobotDelivery({ className = "" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 260 320" className={className} fill="none">
-      <path d="M170 40 L190 15 M195 25 L215 20" stroke="#2B5566" strokeWidth="6" strokeLinecap="round" />
-      <rect x="90" y="50" width="130" height="145" rx="30" fill="#A8DDE8" stroke="#2B5566" strokeWidth="5" />
-      <circle cx="90" cy="115" r="14" fill="#fff" stroke="#2B5566" strokeWidth="4" />
-      <circle cx="90" cy="115" r="5" fill="#2B5566" />
-      <path d="M135 108 Q150 118 165 108" stroke="#2B5566" strokeWidth="5" strokeLinecap="round" fill="none" />
-      <rect x="135" y="195" width="46" height="65" rx="16" fill="#A8DDE8" stroke="#2B5566" strokeWidth="5" />
-      <rect x="122" y="260" width="24" height="50" rx="9" fill="#A8DDE8" stroke="#2B5566" strokeWidth="5" />
-      <rect x="170" y="260" width="24" height="50" rx="9" fill="#A8DDE8" stroke="#2B5566" strokeWidth="5" />
-      <path d="M95 150 L35 175 L55 210 L110 185 Z" fill="#F7941D" stroke="#2B5566" strokeWidth="5" strokeLinejoin="round" />
-    </svg>
-  );
-}
+import Robot3D from "@/components/robot-3d";
+import ScrollReveal from "@/components/scroll-reveal";
 
 function IconFacebook() {
   return (
@@ -94,7 +42,7 @@ function FolderCard({ card }: { card: FolderCard }) {
   const fileCount = entries.filter((e) => e.type === "file").length;
   const folderCount = entries.filter((e) => e.type === "folder").length;
   return (
-    <div className="rounded-2xl border-2 border-[var(--color-orange-deep)] bg-[var(--color-yellow)]/70 p-5 text-center">
+    <div className="glass-card rounded-2xl border-2 border-[var(--color-orange-deep)] bg-[var(--color-yellow)]/70 p-5 text-center">
       <h3 className="display text-sm font-bold text-[var(--color-ink)]">
         {slot.label}
       </h3>
@@ -129,7 +77,7 @@ function FolderCard({ card }: { card: FolderCard }) {
 
 function SectionBanner({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mx-auto max-w-4xl rounded-full border-2 border-[var(--color-orange-deep)] bg-[var(--color-cream)] py-2 text-center">
+    <div className="glass-card mx-auto max-w-4xl rounded-full border-2 border-[var(--color-orange-deep)] bg-[var(--color-cream)] py-2 text-center">
       <span className="display text-sm font-bold tracking-wide text-[var(--color-orange-deep)]">
         {children}
       </span>
@@ -169,49 +117,61 @@ export default async function UiUploadPage() {
         </a>
         <a
           href="/api/logout"
-          className="rounded-full bg-[var(--color-orange-deep)] px-4 py-1.5 font-bold text-white transition hover:brightness-110"
+          className="btn-pop rounded-full bg-[var(--color-orange-deep)] px-4 py-1.5 font-bold text-white"
         >
           Logout
         </a>
       </header>
 
       {/* Hero */}
-      <section className="px-6 pb-10 pt-8 text-center">
-        <p className="display text-sm font-semibold text-[var(--color-orange-deep)]">
-          Discover some UI design !!
-        </p>
-        <h1 className="display mt-2 text-4xl font-extrabold text-[var(--color-orange)] sm:text-5xl">
-          Welcome !!
-        </h1>
-        <div className="mt-6 flex items-end justify-center gap-4">
-          <RobotWaving className="h-28 w-auto" />
-          <RobotBox className="h-28 w-auto" />
-        </div>
+      <section className="bg-aurora relative overflow-hidden px-6 pb-10 pt-8 text-center">
+        <ScrollReveal direction="scale">
+          <p className="display text-sm font-semibold text-[var(--color-orange-deep)]">
+            Discover some UI design !!
+          </p>
+          <h1 className="display mt-2 text-4xl font-extrabold text-[var(--color-orange)] sm:text-5xl">
+            Welcome !!
+          </h1>
+        </ScrollReveal>
+        <ScrollReveal direction="up" delay={150}>
+          <div className="mt-6 flex items-end justify-center gap-4">
+            <Robot3D pose="wave" className="h-28 w-auto" />
+            <Robot3D pose="box" className="h-28 w-auto" />
+          </div>
+        </ScrollReveal>
       </section>
 
       {/* New UI uploaded */}
       <section className="bg-[var(--color-yellow)] px-6 py-10">
-        <SectionBanner>New UI uploaded</SectionBanner>
+        <ScrollReveal direction="up">
+          <SectionBanner>New UI uploaded</SectionBanner>
+        </ScrollReveal>
         <div className="mx-auto mt-8 grid max-w-4xl grid-cols-1 items-start gap-6 sm:grid-cols-3">
-          {newUploadCards.map((card) => (
-            <FolderCard key={card.slot.id} card={card} />
+          {newUploadCards.map((card, i) => (
+            <ScrollReveal key={card.slot.id} direction="up" delay={i * 90}>
+              <FolderCard card={card} />
+            </ScrollReveal>
           ))}
         </div>
       </section>
 
       {/* Apps UI design */}
       <section className="bg-[var(--color-orange)] px-6 py-10">
-        <SectionBanner>Apps UI design</SectionBanner>
+        <ScrollReveal direction="up">
+          <SectionBanner>Apps UI design</SectionBanner>
+        </ScrollReveal>
         <div className="mx-auto mt-8 grid max-w-4xl grid-cols-1 items-start gap-6 sm:grid-cols-3">
-          {appsUiCards.map((card) => (
-            <FolderCard key={card.slot.id} card={card} />
+          {appsUiCards.map((card, i) => (
+            <ScrollReveal key={card.slot.id} direction="up" delay={i * 90}>
+              <FolderCard card={card} />
+            </ScrollReveal>
           ))}
         </div>
       </section>
 
       {/* Feedback */}
       <section className="bg-[var(--color-cream)] px-6 py-12">
-        <div className="mx-auto max-w-4xl">
+        <ScrollReveal direction="up" className="mx-auto max-w-4xl">
           <h2 className="display inline-block rounded-full border-2 border-[var(--color-orange-deep)] px-6 py-2 text-lg font-bold text-[var(--color-orange-deep)]">
             Feedback
           </h2>
@@ -222,39 +182,43 @@ export default async function UiUploadPage() {
           <textarea
             rows={4}
             placeholder="Type your feedback here…"
-            className="mt-4 w-full rounded-2xl border-2 border-[var(--color-orange-deep)] bg-transparent px-4 py-3 text-sm text-[var(--color-ink)] outline-none focus-visible:border-[var(--color-orange)]"
+            className="mt-4 w-full rounded-2xl border-2 border-[var(--color-orange-deep)] bg-transparent px-4 py-3 text-sm text-[var(--color-ink)] outline-none transition focus-visible:border-[var(--color-orange)] focus-visible:shadow-[0_0_0_4px_rgba(247,148,29,0.25)]"
           />
-        </div>
+        </ScrollReveal>
       </section>
 
       {/* Footer */}
       <footer id="contact" className="bg-[var(--color-orange-deep)] px-6 py-14 text-[var(--color-cream)]">
         <div className="mx-auto grid max-w-4xl grid-cols-1 items-center gap-10 sm:grid-cols-2">
-          <RobotDelivery className="mx-auto h-48 w-auto" />
-          <div>
-            <p className="text-sm font-semibold text-[var(--color-yellow)]">
-              Thank you for stopping by !!
-            </p>
-            <h3 className="display mt-4 text-base font-bold">Main office</h3>
-            <address className="mt-2 space-y-1 text-sm not-italic text-[#ffe9c2]">
-              <p>Mulawin St. 5, Cupang Pandi, Bulacan</p>
-              <p>Phone: 0931 144 8575</p>
-              <p>Email: lealenefajardo20@gmail.com</p>
-            </address>
-            <h3 className="display mt-6 text-base font-bold">Get social</h3>
-            <div className="mt-3 flex gap-3">
-              {[IconFacebook, IconTwitter, IconInstagram].map((Icon, i) => (
-                <a
-                  key={i}
-                  href="#"
-                  aria-label="Social link"
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-cream)] text-[var(--color-orange-deep)] transition hover:bg-[var(--color-yellow)]"
-                >
-                  <Icon />
-                </a>
-              ))}
+          <ScrollReveal direction="left">
+            <Robot3D pose="delivery" className="mx-auto h-48 w-auto" />
+          </ScrollReveal>
+          <ScrollReveal direction="right">
+            <div>
+              <p className="text-sm font-semibold text-[var(--color-yellow)]">
+                Thank you for stopping by !!
+              </p>
+              <h3 className="display mt-4 text-base font-bold">Main office</h3>
+              <address className="mt-2 space-y-1 text-sm not-italic text-[#ffe9c2]">
+                <p>Mulawin St. 5, Cupang Pandi, Bulacan</p>
+                <p>Phone: 0931 144 8575</p>
+                <p>Email: lealenefajardo20@gmail.com</p>
+              </address>
+              <h3 className="display mt-6 text-base font-bold">Get social</h3>
+              <div className="mt-3 flex gap-3">
+                {[IconFacebook, IconTwitter, IconInstagram].map((Icon, i) => (
+                  <a
+                    key={i}
+                    href="#"
+                    aria-label="Social link"
+                    className="btn-pop flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-cream)] text-[var(--color-orange-deep)] hover:bg-[var(--color-yellow)]"
+                  >
+                    <Icon />
+                  </a>
+                ))}
+              </div>
             </div>
-          </div>
+          </ScrollReveal>
         </div>
       </footer>
     </main>
