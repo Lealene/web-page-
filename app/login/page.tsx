@@ -74,8 +74,8 @@ export default function LoginPage() {
     e.preventDefault();
     setError(null);
 
-    if (!name || !email || !password) {
-      setError("Please fill in your name, email, and password.");
+    if (!email.trim() || !password) {
+      setError("Please fill in your email and password.");
       return;
     }
 
@@ -84,7 +84,7 @@ export default function LoginPage() {
       const res = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ email, password }),
       });
 
       if (!res.ok) {
