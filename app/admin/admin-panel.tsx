@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { notifyUploadsChanged } from "@/app/ui-upload/live-refresh";
+import Robot3D from "@/components/robot-3d";
+import ScrollReveal from "@/components/scroll-reveal";
 
 type StoredEntry = {
   type: "folder" | "file";
@@ -10,57 +12,6 @@ type StoredEntry = {
   relPath: string;
   url: string;
 };
-
-function RobotWaving({ className = "" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 220 260" className={className} fill="none">
-      <rect x="30" y="20" width="120" height="130" rx="28" fill="#A8DDE8" stroke="#2B5566" strokeWidth="4" />
-      <circle cx="70" cy="75" r="12" fill="#fff" stroke="#2B5566" strokeWidth="3" />
-      <circle cx="70" cy="75" r="4" fill="#2B5566" />
-      <circle cx="112" cy="75" r="12" fill="#fff" stroke="#2B5566" strokeWidth="3" />
-      <circle cx="112" cy="75" r="4" fill="#2B5566" />
-      <path d="M75 108 Q91 118 107 108" stroke="#2B5566" strokeWidth="4" strokeLinecap="round" fill="none" />
-      <rect x="70" y="150" width="42" height="60" rx="14" fill="#A8DDE8" stroke="#2B5566" strokeWidth="4" />
-      <rect x="60" y="205" width="20" height="45" rx="8" fill="#A8DDE8" stroke="#2B5566" strokeWidth="4" />
-      <rect x="102" y="205" width="20" height="45" rx="8" fill="#A8DDE8" stroke="#2B5566" strokeWidth="4" />
-      <path d="M40 100 Q10 80 20 45" stroke="#2B5566" strokeWidth="6" strokeLinecap="round" fill="none" />
-      <circle cx="20" cy="42" r="7" fill="#A8DDE8" stroke="#2B5566" strokeWidth="4" />
-    </svg>
-  );
-}
-
-function RobotBox({ className = "" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 220 260" className={className} fill="none">
-      <rect x="70" y="20" width="120" height="130" rx="28" fill="#A8DDE8" stroke="#2B5566" strokeWidth="4" />
-      <circle cx="112" cy="75" r="12" fill="#fff" stroke="#2B5566" strokeWidth="3" />
-      <circle cx="112" cy="75" r="4" fill="#2B5566" />
-      <circle cx="152" cy="75" r="12" fill="#fff" stroke="#2B5566" strokeWidth="3" />
-      <circle cx="152" cy="75" r="4" fill="#2B5566" />
-      <path d="M117 108 Q131 116 145 108" stroke="#2B5566" strokeWidth="4" strokeLinecap="round" fill="none" />
-      <rect x="112" y="150" width="42" height="60" rx="14" fill="#A8DDE8" stroke="#2B5566" strokeWidth="4" />
-      <rect x="102" y="205" width="20" height="45" rx="8" fill="#A8DDE8" stroke="#2B5566" strokeWidth="4" />
-      <rect x="144" y="205" width="20" height="45" rx="8" fill="#A8DDE8" stroke="#2B5566" strokeWidth="4" />
-      <path d="M78 105 L40 130 L20 105 L58 82 Z" fill="#F7941D" stroke="#2B5566" strokeWidth="4" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function RobotDelivery({ className = "" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 260 320" className={className} fill="none">
-      <path d="M170 40 L190 15 M195 25 L215 20" stroke="#2B5566" strokeWidth="6" strokeLinecap="round" />
-      <rect x="90" y="50" width="130" height="145" rx="30" fill="#A8DDE8" stroke="#2B5566" strokeWidth="5" />
-      <circle cx="90" cy="115" r="14" fill="#fff" stroke="#2B5566" strokeWidth="4" />
-      <circle cx="90" cy="115" r="5" fill="#2B5566" />
-      <path d="M135 108 Q150 118 165 108" stroke="#2B5566" strokeWidth="5" strokeLinecap="round" fill="none" />
-      <rect x="135" y="195" width="46" height="65" rx="16" fill="#A8DDE8" stroke="#2B5566" strokeWidth="5" />
-      <rect x="122" y="260" width="24" height="50" rx="9" fill="#A8DDE8" stroke="#2B5566" strokeWidth="5" />
-      <rect x="170" y="260" width="24" height="50" rx="9" fill="#A8DDE8" stroke="#2B5566" strokeWidth="5" />
-      <path d="M95 150 L35 175 L55 210 L110 185 Z" fill="#F7941D" stroke="#2B5566" strokeWidth="5" strokeLinejoin="round" />
-    </svg>
-  );
-}
 
 function IconFacebook() {
   return (
@@ -87,7 +38,6 @@ function IconInstagram() {
 }
 
 type UploadSlot = { id: string; label: string };
-
 type StagedItem = { file: File; relPath: string };
 
 const newUploadSlots: UploadSlot[] = [
@@ -110,9 +60,10 @@ const fixedSlotIds = [
 const placeholderSlotIds = ["new-page", "apps-page"];
 
 function relPathsOf(files: File[]): string[] {
-  return files.map((f) =>
-    (f as File & { webkitRelativePath?: string }).webkitRelativePath ||
-    f.name
+  return files.map(
+    (f) =>
+      (f as File & { webkitRelativePath?: string }).webkitRelativePath ||
+      f.name
   );
 }
 
@@ -138,23 +89,16 @@ function UploadCard({
   const fileInputId = `file-${slot.id}`;
   const folderInputId = `folder-${slot.id}`;
 
-  function addFromInput(
-    input: HTMLInputElement | null,
-    folderMode: boolean
-  ) {
+  function addFromInput(input: HTMLInputElement | null, folderMode: boolean) {
     const picked = input?.files ? Array.from(input.files) : [];
     if (picked.length === 0 || uploading) return;
-    const relPaths = folderMode
-      ? relPathsOf(picked)
-      : picked.map((f) => f.name);
+    const relPaths = folderMode ? relPathsOf(picked) : picked.map((f) => f.name);
     onUpload(picked.map((file, i) => ({ file, relPath: relPaths[i] })));
-    if (input) {
-      input.value = "";
-    }
+    if (input) input.value = "";
   }
 
   return (
-    <div className="rounded-2xl border-2 border-[var(--color-cream)] bg-[var(--color-orange-deep)]/40 p-5 text-center">
+    <div className="glass-card rounded-2xl border-2 border-white/40 bg-[var(--color-orange-deep)]/40 p-5 text-center">
       <h3 className="display text-sm font-bold text-[var(--color-cream)]">
         {slot.label}
       </h3>
@@ -173,10 +117,7 @@ function UploadCard({
           </p>
           <ul className="mt-2 space-y-1.5">
             {stored.slice(0, 6).map((entry) => (
-              <li
-                key={entry.relPath}
-                className="flex items-center justify-between gap-2"
-              >
+              <li key={entry.relPath} className="flex items-center justify-between gap-2">
                 <span
                   className="truncate text-[11px] font-semibold text-[var(--color-cream)]"
                   title={entry.relPath}
@@ -187,7 +128,7 @@ function UploadCard({
                   type="button"
                   onClick={() => onDelete(entry)}
                   disabled={deleting === entry.relPath}
-                  className="shrink-0 rounded-full bg-[#b3261e] px-2.5 py-0.5 text-[10px] font-bold text-white transition hover:brightness-110 disabled:opacity-50"
+                  className="btn-pop shrink-0 rounded-full bg-[#b3261e] px-2.5 py-0.5 text-[10px] font-bold text-white disabled:opacity-50"
                 >
                   {deleting === entry.relPath ? "…" : "Delete"}
                 </button>
@@ -205,21 +146,15 @@ function UploadCard({
       <div className="mt-4 flex items-center justify-center gap-2">
         <label
           htmlFor={fileInputId}
-          className="cursor-pointer rounded-full bg-[var(--color-yellow)] px-4 py-1.5 text-xs font-bold text-[var(--color-orange-deep)] transition hover:-translate-y-0.5"
+          className="btn-pop cursor-pointer rounded-full bg-[var(--color-yellow)] px-4 py-1.5 text-xs font-bold text-[var(--color-orange-deep)] shadow-[0_3px_0_0_rgba(0,0,0,0.15)]"
         >
           {uploading ? "Uploading…" : "Add file"}
         </label>
-        <input
-          id={fileInputId}
-          type="file"
-          multiple
-          className="sr-only"
-          onChange={(e) => addFromInput(e.target, false)}
-        />
+        <input id={fileInputId} type="file" multiple className="sr-only" onChange={(e) => addFromInput(e.target, false)} />
 
         <label
           htmlFor={folderInputId}
-          className="cursor-pointer rounded-full border-2 border-[var(--color-yellow)] px-4 py-1.5 text-xs font-bold text-[var(--color-yellow)] transition hover:-translate-y-0.5"
+          className="btn-pop cursor-pointer rounded-full border-2 border-[var(--color-yellow)] px-4 py-1.5 text-xs font-bold text-[var(--color-yellow)]"
         >
           Upload folder
         </label>
@@ -228,9 +163,7 @@ function UploadCard({
           type="file"
           multiple
           className="sr-only"
-          {...({
-            webkitdirectory: "",
-          } as React.InputHTMLAttributes<HTMLInputElement>)}
+          {...({ webkitdirectory: "" } as React.InputHTMLAttributes<HTMLInputElement>)}
           onChange={(e) => addFromInput(e.target, true)}
         />
 
@@ -238,7 +171,7 @@ function UploadCard({
           type="button"
           onClick={onDeleteAll}
           disabled={deletingAll}
-          className="shrink-0 rounded-full bg-[#b3261e] px-4 py-1.5 text-xs font-bold text-white transition hover:brightness-110 disabled:opacity-50"
+          className="btn-pop shrink-0 rounded-full bg-[#b3261e] px-4 py-1.5 text-xs font-bold text-white disabled:opacity-50"
         >
           {deletingAll ? "…" : "Delete all"}
         </button>
@@ -249,7 +182,7 @@ function UploadCard({
 
 function SectionBanner({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mx-auto max-w-4xl rounded-full border-2 border-[var(--color-cream)] bg-[var(--color-orange-deep)] py-2 text-center">
+    <div className="glass-card mx-auto max-w-4xl rounded-full border-2 border-[var(--color-cream)] bg-[var(--color-orange-deep)] py-2 text-center">
       <span className="display text-sm font-bold tracking-wide text-[var(--color-cream)]">
         {children}
       </span>
@@ -277,10 +210,7 @@ export default function AdminPage() {
       const res = await fetch("/api/cards", { cache: "no-store" });
       if (!res.ok) return;
       const data = (await res.json()) as {
-        slots: {
-          newSection: UploadSlot[];
-          appsSection: UploadSlot[];
-        };
+        slots: { newSection: UploadSlot[]; appsSection: UploadSlot[] };
         folders: Record<string, StoredEntry[]>;
       };
       setNewSection(data.slots?.newSection ?? newUploadSlots);
@@ -301,13 +231,8 @@ export default function AdminPage() {
     setStatus(null);
     try {
       const form = new FormData();
-      added.forEach((item) => {
-        form.append(slotId, item.file);
-      });
-      form.append(
-        `paths-${slotId}`,
-        JSON.stringify(added.map((item) => item.relPath))
-      );
+      added.forEach((item) => form.append(slotId, item.file));
+      form.append(`paths-${slotId}`, JSON.stringify(added.map((item) => item.relPath)));
       const res = await fetch("/api/upload", { method: "POST", body: form });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
@@ -339,9 +264,7 @@ export default function AdminPage() {
       setStored((prev) => ({
         ...prev,
         [slotId]: (prev[slotId] ?? []).filter(
-          (e) =>
-            e.relPath !== entry.relPath &&
-            !e.relPath.startsWith(`${entry.relPath}/`)
+          (e) => e.relPath !== entry.relPath && !e.relPath.startsWith(`${entry.relPath}/`)
         ),
       }));
       notifyUploadsChanged();
@@ -354,15 +277,11 @@ export default function AdminPage() {
 
   async function handleDeleteAll(slotId: string) {
     const isCustom =
-      [...newSection, ...appsSection].some(
-        (s) => s.id === slotId
-      ) && !fixedSlotIds.includes(slotId);
+      [...newSection, ...appsSection].some((s) => s.id === slotId) && !fixedSlotIds.includes(slotId);
 
     if (
       !window.confirm(
-        isCustom
-          ? "Delete this entire page/card? This can't be undone."
-          : "Delete this entire box? This can't be undone."
+        isCustom ? "Delete this entire page/card? This can't be undone." : "Delete this entire box? This can't be undone."
       )
     ) {
       return;
@@ -370,10 +289,7 @@ export default function AdminPage() {
     setDeletingAll(slotId);
     try {
       if (isCustom) {
-        const res = await fetch(
-          `/api/cards?id=${encodeURIComponent(slotId)}`,
-          { method: "DELETE" }
-        );
+        const res = await fetch(`/api/cards?id=${encodeURIComponent(slotId)}`, { method: "DELETE" });
         if (!res.ok) {
           const data = await res.json().catch(() => null);
           throw new Error(data?.message ?? "Couldn't delete this card.");
@@ -381,10 +297,7 @@ export default function AdminPage() {
         setNewSection((prev) => prev.filter((s) => s.id !== slotId));
         setAppsSection((prev) => prev.filter((s) => s.id !== slotId));
       } else {
-        const res = await fetch(
-          `/api/files?slot=${encodeURIComponent(slotId)}&all=1`,
-          { method: "DELETE" }
-        );
+        const res = await fetch(`/api/files?slot=${encodeURIComponent(slotId)}&all=1`, { method: "DELETE" });
         if (!res.ok) {
           const data = await res.json().catch(() => null);
           throw new Error(data?.message ?? "Couldn't empty this box.");
@@ -454,175 +367,170 @@ export default function AdminPage() {
     <main className="min-h-screen bg-[var(--color-orange)]">
       {/* Top bar */}
       <header className="flex items-center justify-end gap-6 border-b-2 border-[var(--color-cream)]/20 bg-[var(--color-yellow)] px-6 py-2 text-xs">
-        <Link href="/" className="font-semibold text-[var(--color-ink-soft)] hover:text-[var(--color-ink)]">
+        <Link href="/" className="font-semibold text-[var(--color-ink-soft)] transition hover:text-[var(--color-ink)]">
           Home
         </Link>
-        <a href="#contact" className="font-semibold text-[var(--color-ink-soft)] hover:text-[var(--color-ink)]">
+        <a href="#contact" className="font-semibold text-[var(--color-ink-soft)] transition hover:text-[var(--color-ink)]">
           Contact
         </a>
         <button
           type="button"
           onClick={handleLogout}
-          className="rounded-full bg-[var(--color-orange-deep)] px-4 py-1.5 font-bold text-white transition hover:brightness-110"
+          className="btn-pop rounded-full bg-[var(--color-orange-deep)] px-4 py-1.5 font-bold text-white"
         >
           Logout
         </button>
       </header>
 
       {/* Hero */}
-      <section className="bg-[var(--color-cream)] px-6 pb-10 pt-8 text-center">
-        <p className="display text-sm font-semibold text-[var(--color-orange-deep)]">
-          Admin page
-        </p>
-        <h1 className="display mt-2 text-4xl font-extrabold text-[var(--color-orange)] sm:text-5xl">
-          Welcome !!
-        </h1>
-        <div className="mt-6 flex items-end justify-center gap-4">
-          <RobotWaving className="h-28 w-auto" />
-          <RobotBox className="h-28 w-auto" />
-        </div>
+      <section className="bg-aurora relative overflow-hidden px-6 pb-14 pt-10 text-center">
+        <ScrollReveal direction="scale">
+          <p className="display text-sm font-semibold text-[var(--color-orange-deep)]">Admin page</p>
+          <h1 className="display mt-2 text-4xl font-extrabold text-[var(--color-orange)] sm:text-5xl">
+            Welcome !!
+          </h1>
+        </ScrollReveal>
+        <ScrollReveal direction="up" delay={150}>
+          <div className="mt-8 flex items-end justify-center gap-6">
+            <Robot3D pose="wave" className="h-32 w-auto sm:h-36" />
+            <Robot3D pose="box" className="h-32 w-auto sm:h-36" />
+          </div>
+        </ScrollReveal>
       </section>
 
       {/* New UI uploaded */}
-      <section className="px-6 py-10">
-        <SectionBanner>New UI uploaded</SectionBanner>
+      <section className="px-6 py-14">
+        <ScrollReveal direction="up">
+          <SectionBanner>New UI uploaded</SectionBanner>
+        </ScrollReveal>
         <div className="mx-auto mt-8 grid max-w-4xl grid-cols-1 items-start gap-6 sm:grid-cols-3">
           {newSection
-            .filter(
-              (slot) =>
-                !removedSlots.includes(slot.id) &&
-                !placeholderSlotIds.includes(slot.id)
-            )
-            .map((slot) => (
-              <UploadCard
-                key={slot.id}
-                slot={slot}
-                stored={stored[slot.id] ?? []}
-                uploading={uploadingSlot === slot.id}
-                onUpload={(added) => handleUpload(slot.id, added)}
-                onDelete={(entry) => handleDelete(entry, slot.id)}
-                onDeleteAll={() => handleDeleteAll(slot.id)}
-                deleting={deleting}
-                deletingAll={deletingAll === slot.id}
-              />
+            .filter((slot) => !removedSlots.includes(slot.id) && !placeholderSlotIds.includes(slot.id))
+            .map((slot, i) => (
+              <ScrollReveal key={slot.id} direction="up" delay={i * 90}>
+                <UploadCard
+                  slot={slot}
+                  stored={stored[slot.id] ?? []}
+                  uploading={uploadingSlot === slot.id}
+                  onUpload={(added) => handleUpload(slot.id, added)}
+                  onDelete={(entry) => handleDelete(entry, slot.id)}
+                  onDeleteAll={() => handleDeleteAll(slot.id)}
+                  deleting={deleting}
+                  deletingAll={deletingAll === slot.id}
+                />
+              </ScrollReveal>
             ))}
         </div>
       </section>
 
       {/* Apps UI design */}
-      <section className="bg-[var(--color-orange-deep)]/20 px-6 py-10">
-        <SectionBanner>Apps UI design</SectionBanner>
+      <section className="bg-[var(--color-orange-deep)]/20 px-6 py-14">
+        <ScrollReveal direction="up">
+          <SectionBanner>Apps UI design</SectionBanner>
+        </ScrollReveal>
         <div className="mx-auto mt-8 grid max-w-4xl grid-cols-1 items-start gap-6 sm:grid-cols-3">
           {appsSection
-            .filter(
-              (slot) =>
-                !removedSlots.includes(slot.id) &&
-                !placeholderSlotIds.includes(slot.id)
-            )
-            .map((slot) => (
-              <UploadCard
-                key={slot.id}
-                slot={slot}
-                stored={stored[slot.id] ?? []}
-                uploading={uploadingSlot === slot.id}
-                onUpload={(added) => handleUpload(slot.id, added)}
-                onDelete={(entry) => handleDelete(entry, slot.id)}
-                onDeleteAll={() => handleDeleteAll(slot.id)}
-                deleting={deleting}
-                deletingAll={deletingAll === slot.id}
-              />
+            .filter((slot) => !removedSlots.includes(slot.id) && !placeholderSlotIds.includes(slot.id))
+            .map((slot, i) => (
+              <ScrollReveal key={slot.id} direction="up" delay={i * 90}>
+                <UploadCard
+                  slot={slot}
+                  stored={stored[slot.id] ?? []}
+                  uploading={uploadingSlot === slot.id}
+                  onUpload={(added) => handleUpload(slot.id, added)}
+                  onDelete={(entry) => handleDelete(entry, slot.id)}
+                  onDeleteAll={() => handleDeleteAll(slot.id)}
+                  deleting={deleting}
+                  deletingAll={deletingAll === slot.id}
+                />
+              </ScrollReveal>
             ))}
         </div>
 
-        <div className="mx-auto mt-8 max-w-4xl text-center">
-          <button
-            type="button"
-            onClick={() => setShowCardModal(true)}
-            disabled={creatingCard}
-            className="rounded-full bg-[var(--color-yellow)] px-8 py-2.5 text-sm font-extrabold text-[var(--color-orange-deep)] shadow-[0_3px_0_0_var(--color-orange-deep)] transition hover:-translate-y-0.5 active:translate-y-0 active:shadow-none disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {creatingCard ? "Creating…" : "Upload files"}
-          </button>
-          {status && (
-            <p className="mt-3 text-sm font-semibold text-[var(--color-cream)]">
-              {status}
-            </p>
-          )}
-        </div>
+        <ScrollReveal direction="scale">
+          <div className="mx-auto mt-8 max-w-4xl text-center">
+            <button
+              type="button"
+              onClick={() => setShowCardModal(true)}
+              disabled={creatingCard}
+              className="btn-pop rounded-full bg-[var(--color-yellow)] px-8 py-2.5 text-sm font-extrabold text-[var(--color-orange-deep)] shadow-[0_3px_0_0_var(--color-orange-deep)] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {creatingCard ? "Creating…" : "Upload files"}
+            </button>
+            {status && (
+              <p className="mt-3 text-sm font-semibold text-[var(--color-cream)]">{status}</p>
+            )}
+          </div>
+        </ScrollReveal>
       </section>
 
       {/* Feedback / notes */}
-      <section className="bg-[var(--color-cream)] px-6 py-12">
-        <div className="mx-auto max-w-4xl">
+      <section className="bg-[var(--color-cream)] px-6 py-14">
+        <ScrollReveal direction="up" className="mx-auto max-w-4xl">
           <h2 className="display inline-block rounded-full border-2 border-[var(--color-orange-deep)] px-6 py-2 text-lg font-bold text-[var(--color-orange-deep)]">
             Feedback
           </h2>
           <p className="mt-3 text-xs text-[var(--color-ink-soft)]">
-            Add a note for this batch of uploads (visible to your team, not
-            to visitors).
+            Add a note for this batch of uploads (visible to your team, not to visitors).
           </p>
           <textarea
             rows={4}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Type notes here…"
-            className="mt-4 w-full rounded-2xl border-2 border-[var(--color-orange-deep)] bg-transparent px-4 py-3 text-sm text-[var(--color-ink)] outline-none focus-visible:border-[var(--color-orange)]"
+            className="mt-4 w-full rounded-2xl border-2 border-[var(--color-orange-deep)] bg-transparent px-4 py-3 text-sm text-[var(--color-ink)] outline-none transition focus-visible:border-[var(--color-orange)] focus-visible:shadow-[0_0_0_4px_rgba(247,148,29,0.25)]"
           />
-        </div>
+        </ScrollReveal>
       </section>
 
       {/* Footer */}
-      <footer id="contact" className="bg-[var(--color-orange-deep)] px-6 py-14 text-[var(--color-cream)]">
+      <footer id="contact" className="bg-[var(--color-orange-deep)] px-6 py-16 text-[var(--color-cream)]">
         <div className="mx-auto grid max-w-4xl grid-cols-1 items-center gap-10 sm:grid-cols-2">
-          <RobotDelivery className="mx-auto h-48 w-auto" />
-          <div>
-            <p className="text-sm font-semibold text-[var(--color-yellow)]">
-              Thank you for stopping by !!
-            </p>
-            <h3 className="display mt-4 text-base font-bold">Main office</h3>
-            <address className="mt-2 space-y-1 text-sm not-italic text-[#ffe9c2]">
-              <p>Mulawin St. 5, Cupang Pandi, Bulacan</p>
-              <p>Phone: 0931 144 8575</p>
-              <p>Email: lealenefajardo20@gmail.com</p>
-            </address>
-            <h3 className="display mt-6 text-base font-bold">Get social</h3>
-            <div className="mt-3 flex gap-3">
-              {[IconFacebook, IconTwitter, IconInstagram].map((Icon, i) => (
-                <a
-                  key={i}
-                  href="#"
-                  aria-label="Social link"
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-cream)] text-[var(--color-orange-deep)] transition hover:bg-[var(--color-yellow)]"
-                >
-                  <Icon />
-                </a>
-              ))}
+          <ScrollReveal direction="left">
+            <Robot3D pose="delivery" className="mx-auto h-56 w-auto" />
+          </ScrollReveal>
+          <ScrollReveal direction="right">
+            <div>
+              <p className="text-sm font-semibold text-[var(--color-yellow)]">Thank you for stopping by !!</p>
+              <h3 className="display mt-4 text-base font-bold">Main office</h3>
+              <address className="mt-2 space-y-1 text-sm not-italic text-[#ffe9c2]">
+                <p>Mulawin St. 5, Cupang Pandi, Bulacan</p>
+                <p>Phone: 0931 144 8575</p>
+                <p>Email: lealenefajardo20@gmail.com</p>
+              </address>
+              <h3 className="display mt-6 text-base font-bold">Get social</h3>
+              <div className="mt-3 flex gap-3">
+                {[IconFacebook, IconTwitter, IconInstagram].map((Icon, i) => (
+                  <a
+                    key={i}
+                    href="#"
+                    aria-label="Social link"
+                    className="btn-pop flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-cream)] text-[var(--color-orange-deep)] hover:bg-[var(--color-yellow)]"
+                  >
+                    <Icon />
+                  </a>
+                ))}
+              </div>
             </div>
-          </div>
+          </ScrollReveal>
         </div>
       </footer>
 
       {showCardModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 backdrop-blur-sm"
+          style={{ animation: "aurora-drift 0.01s" }}
           onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowCardModal(false);
-            }
+            if (e.target === e.currentTarget) setShowCardModal(false);
           }}
         >
-          <div className="w-full max-w-md rounded-3xl border-2 border-[var(--color-orange-deep)] bg-[var(--color-cream)] p-6 text-center shadow-2xl">
-            <h2 className="display text-xl font-extrabold text-[var(--color-orange)]">
-              Create a new page
-            </h2>
+          <div className="glass-card w-full max-w-md rounded-3xl border-2 border-[var(--color-orange-deep)] bg-[var(--color-cream)] p-6 text-center shadow-2xl">
+            <h2 className="display text-xl font-extrabold text-[var(--color-orange)]">Create a new page</h2>
             <p className="mt-2 text-xs text-[var(--color-ink-soft)]">
               Enter a title for your new page. It will appear as a new card.
             </p>
 
-            <label
-              htmlFor="new-card-title"
-              className="mt-5 block text-left text-xs font-bold text-[var(--color-orange-deep)]"
-            >
+            <label htmlFor="new-card-title" className="mt-5 block text-left text-xs font-bold text-[var(--color-orange-deep)]">
               Page title
             </label>
             <input
@@ -631,13 +539,11 @@ export default function AdminPage() {
               value={cardTitle}
               onChange={(e) => setCardTitle(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  handleFinishCreateCard();
-                }
+                if (e.key === "Enter") handleFinishCreateCard();
               }}
               placeholder="My New Page"
               autoFocus
-              className="mt-2 w-full rounded-2xl border-2 border-[var(--color-orange-deep)] bg-transparent px-4 py-3 text-sm text-[var(--color-ink)] outline-none focus-visible:border-[var(--color-orange)]"
+              className="mt-2 w-full rounded-2xl border-2 border-[var(--color-orange-deep)] bg-transparent px-4 py-3 text-sm text-[var(--color-ink)] outline-none transition focus-visible:border-[var(--color-orange)] focus-visible:shadow-[0_0_0_4px_rgba(247,148,29,0.25)]"
             />
 
             <div className="mt-5 flex items-center justify-center gap-4 text-xs font-bold">
@@ -667,7 +573,7 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={() => setShowCardModal(false)}
-                className="rounded-full border-2 border-[var(--color-orange-deep)] px-6 py-2 text-xs font-bold text-[var(--color-orange-deep)] transition hover:-translate-y-0.5"
+                className="btn-pop rounded-full border-2 border-[var(--color-orange-deep)] px-6 py-2 text-xs font-bold text-[var(--color-orange-deep)]"
               >
                 Cancel
               </button>
@@ -675,7 +581,7 @@ export default function AdminPage() {
                 type="button"
                 onClick={handleFinishCreateCard}
                 disabled={creatingCard}
-                className="rounded-full bg-[var(--color-orange-deep)] px-6 py-2 text-xs font-bold text-[var(--color-cream)] shadow-[0_3px_0_0_var(--color-orange)] transition hover:-translate-y-0.5 active:translate-y-0 active:shadow-none disabled:cursor-not-allowed disabled:opacity-60"
+                className="btn-pop rounded-full bg-[var(--color-orange-deep)] px-6 py-2 text-xs font-bold text-[var(--color-cream)] shadow-[0_3px_0_0_var(--color-orange)] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {creatingCard ? "Working…" : "Finish / Upload"}
               </button>

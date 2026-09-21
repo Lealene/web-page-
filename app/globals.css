@@ -45,6 +45,126 @@ h3,
   outline-offset: 3px;
 }
 
+/* ---------------------------------------------------------------------- */
+/* Modern surface helpers                                                  */
+/* ---------------------------------------------------------------------- */
+
+/* Animated, slow-drifting gradient for hero / section backgrounds */
+.bg-aurora {
+  background: linear-gradient(
+    120deg,
+    var(--color-cream),
+    #ffe9b8,
+    var(--color-yellow),
+    #ffe9b8,
+    var(--color-cream)
+  );
+  background-size: 300% 300%;
+  animation: aurora-drift 16s ease-in-out infinite;
+}
+
+@keyframes aurora-drift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Soft glass card used for panels/cards throughout */
+.glass-card {
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: 0 10px 30px -12px rgba(28, 43, 48, 0.25);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.glass-card:hover {
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: 0 20px 40px -14px rgba(28, 43, 48, 0.35);
+}
+
+/* Buttons: lift + glow on hover, satisfying press-down on click */
+.btn-pop {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), filter 0.25s ease;
+}
+.btn-pop:hover {
+  transform: translateY(-3px) scale(1.03);
+  filter: brightness(1.06);
+}
+.btn-pop:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Robot3D motion                                                          */
+/* ---------------------------------------------------------------------- */
+
+.robot3d-float {
+  animation: robot-float 4.5s ease-in-out infinite;
+  transform-origin: 50% 100%;
+}
+.robot3d-static {
+  animation: none;
+}
+
+@keyframes robot-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(-1.5deg); }
+}
+
+.robot3d-sway {
+  animation: robot-sway 5.5s ease-in-out infinite;
+}
+@keyframes robot-sway {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(1.2deg); }
+}
+
+.robot3d-shadow {
+  animation: robot-shadow 4.5s ease-in-out infinite;
+  transform-origin: 110px 262px;
+}
+@keyframes robot-shadow {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(0.82); opacity: 0.7; }
+}
+
+.robot3d-blink {
+  animation: robot-blink 5s ease-in-out infinite;
+}
+@keyframes robot-blink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.12); }
+}
+
+.robot3d-wave {
+  animation: robot-wave 2.1s ease-in-out infinite;
+}
+@keyframes robot-wave {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-18deg); }
+  50% { transform: rotate(4deg); }
+  75% { transform: rotate(-12deg); }
+}
+
+.robot3d-nod {
+  animation: robot-nod 3.2s ease-in-out infinite;
+}
+@keyframes robot-nod {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(6deg); }
+}
+
+.robot3d-blip {
+  animation: robot-blip 1.6s ease-in-out infinite;
+}
+@keyframes robot-blip {
+  0%, 100% { opacity: 1; filter: drop-shadow(0 0 0px #F7941D); }
+  50% { opacity: 0.6; filter: drop-shadow(0 0 6px #F7941D); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.001ms !important;
