@@ -90,7 +90,7 @@ const services = [
     price: "Send the details",
     body: "Tell me what you need and I'll get back to you with next steps.",
     bullets: [
-      "0931 144 8575",
+      "0955 776 908",
       "facebook.com/tennyyaang",
       "lealenefajardo20@gmail.com",
       "instagram.com/lle_fjrd",
@@ -341,7 +341,7 @@ export default function Page() {
               <h3 className="display mt-4 text-lg font-bold">Main office</h3>
               <address className="mt-2 space-y-1 text-sm not-italic text-[#ffe9c2]">
                 <p>Mulawin St. 5, Cupang Pandi, Bulacan</p>
-                <p>Phone: 0931 144 8575</p>
+                <p>Phone: 0955 776 908</p>
                 <p>Email: lealenefajardo20@gmail.com</p>
               </address>
 
