@@ -6,6 +6,7 @@ import EntryRow from "@/app/ui-upload/entry-row";
 import LiveRefresh from "@/app/ui-upload/live-refresh";
 import Robot3D from "@/components/robot-3d";
 import ScrollReveal from "@/components/scroll-reveal";
+import FeedbackUser from "@/components/feedback-user";
 
 function IconFacebook() {
   return (
@@ -169,21 +170,10 @@ export default async function UiUploadPage() {
         </div>
       </section>
 
-      {/* Feedback */}
+      {/* Customer feedback & request quotes - comment posts */}
       <section className="bg-[var(--color-cream)] px-6 py-12">
-        <ScrollReveal direction="up" className="mx-auto max-w-4xl">
-          <h2 className="display inline-block rounded-full border-2 border-[var(--color-orange-deep)] px-6 py-2 text-lg font-bold text-[var(--color-orange-deep)]">
-            Feedback
-          </h2>
-          <p className="mt-3 text-xs text-[var(--color-ink-soft)]">
-            Let me know what you think of these files, or what you&rsquo;d like
-            to see next.
-          </p>
-          <textarea
-            rows={4}
-            placeholder="Type your feedback here…"
-            className="mt-4 w-full rounded-2xl border-2 border-[var(--color-orange-deep)] bg-transparent px-4 py-3 text-sm text-[var(--color-ink)] outline-none transition focus-visible:border-[var(--color-orange)] focus-visible:shadow-[0_0_0_4px_rgba(247,148,29,0.25)]"
-          />
+        <ScrollReveal direction="up">
+          <FeedbackUser />
         </ScrollReveal>
       </section>
 

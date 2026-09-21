@@ -190,8 +190,17 @@ function SectionBanner({ children }: { children: React.ReactNode }) {
   );
 }
 
+type FeedbackEntry = {
+  id: string;
+  message: string;
+  authorName: string | null;
+  authorEmail: string | null;
+  type: "feedback" | "quote";
+  pinned: boolean;
+  createdAt: string;
+};
+
 export default function AdminPage() {
-  const [notes, setNotes] = useState("");
   const [status, setStatus] = useState<string | null>(null);
   const [stored, setStored] = useState<Record<string, StoredEntry[]>>({});
   const [uploadingSlot, setUploadingSlot] = useState<string | null>(null);
@@ -204,6 +213,8 @@ export default function AdminPage() {
   const [cardTitle, setCardTitle] = useState("");
   const [cardSection, setCardSection] = useState<"new" | "apps">("new");
   const [creatingCard, setCreatingCard] = useState(false);
+  const [feedbacks, setFeedbacks] = useState<FeedbackEntry[]>([]);
+  const [fbLoading, setFbLoading] = useState(true);
 
   const loadStored = useCallback(async () => {
     try {
@@ -221,9 +232,64 @@ export default function AdminPage() {
     }
   }, []);
 
+  const loadFeedbacks = useCallback(async () => {
+    try {
+      setFbLoading(true);
+      const res = await fetch("/api/feedback", { cache: "no-store" });
+      if (!res.ok) return;
+      const data = (await res.json()) as { entries: FeedbackEntry[] };
+      setFeedbacks(data.entries ?? []);
+    } finally {
+      setFbLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     loadStored();
   }, [loadStored]);
+
+  useEffect(() => {
+    loadFeedbacks();
+  }, [loadFeedbacks]);
+
+  async function handleTogglePin(id: string) {
+    try {
+      const res = await fetch("/api/feedback", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => null);
+        throw new Error(d?.message ?? "Couldn't update pin.");
+      }
+      const d = (await res.json()) as { entry: FeedbackEntry };
+      setFeedbacks((prev) => {
+        const next = prev.map((f) => (f.id === id ? d.entry : f));
+        return next.sort((a, b) => {
+          if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        });
+      });
+    } catch (e) {
+      setStatus(e instanceof Error ? e.message : "Pin failed.");
+    }
+  }
+
+  async function handleDeleteFeedback(id: string) {
+    if (!window.confirm("Delete this comment?")) return;
+    try {
+      const res = await fetch(`/api/feedback?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      if (!res.ok) {
+        const d = await res.json().catch(() => null);
+        throw new Error(d?.message ?? "Couldn't delete.");
+      }
+      setFeedbacks((prev) => prev.filter((f) => f.id !== id));
+      setStatus("Comment deleted.");
+    } catch (e) {
+      setStatus(e instanceof Error ? e.message : "Delete failed.");
+    }
+  }
 
   async function handleUpload(slotId: string, added: StagedItem[]) {
     if (added.length === 0) return;
@@ -464,22 +530,76 @@ export default function AdminPage() {
         </ScrollReveal>
       </section>
 
-      {/* Feedback / notes */}
+      {/* Customer feedback & request quotes */}
       <section className="bg-[var(--color-cream)] px-6 py-14">
         <ScrollReveal direction="up" className="mx-auto max-w-4xl">
-          <h2 className="display inline-block rounded-full border-2 border-[var(--color-orange-deep)] px-6 py-2 text-lg font-bold text-[var(--color-orange-deep)]">
-            Feedback
-          </h2>
-          <p className="mt-3 text-xs text-[var(--color-ink-soft)]">
-            Add a note for this batch of uploads (visible to your team, not to visitors).
+          <div className="flex flex-wrap items-center gap-3">
+            <h2 className="display inline-block rounded-full border-2 border-[var(--color-orange-deep)] px-6 py-2 text-lg font-bold text-[var(--color-orange-deep)]">
+              Customer feedback & request quotes
+            </h2>
+            <span className="rounded-full bg-[var(--color-yellow)] px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-[var(--color-orange-deep)]">
+              Posts from ui-upload
+            </span>
+          </div>
+          <p className="mt-3 text-xs leading-relaxed text-[var(--color-ink-soft)]">
+            Comments and quote requests posted on the ui-upload page appear here. Pin the best ones to highlight them for everyone — pinned posts stay at the top.
           </p>
-          <textarea
-            rows={4}
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Type notes here…"
-            className="mt-4 w-full rounded-2xl border-2 border-[var(--color-orange-deep)] bg-transparent px-4 py-3 text-sm text-[var(--color-ink)] outline-none transition focus-visible:border-[var(--color-orange)] focus-visible:shadow-[0_0_0_4px_rgba(247,148,29,0.25)]"
-          />
+
+          {fbLoading ? (
+            <p className="mt-6 text-xs font-semibold text-[var(--color-ink-soft)]">Loading customer posts…</p>
+          ) : feedbacks.length === 0 ? (
+            <div className="mt-6 rounded-2xl border-2 border-dashed border-[var(--color-orange-deep)]/30 bg-[var(--color-yellow)]/15 p-8 text-center">
+              <p className="text-sm font-semibold text-[var(--color-ink-soft)]">No customer posts yet.</p>
+              <p className="mt-1 text-xs text-[var(--color-ink-soft)]">When someone comments on the ui-upload page, it will show up here.</p>
+            </div>
+          ) : (
+            <ul className="mt-6 space-y-3">
+              {feedbacks.map((fb) => (
+                <li
+                  key={fb.id}
+                  className={`glass-card rounded-2xl border-2 p-4 text-left ${
+                    fb.pinned ? "border-[var(--color-orange-deep)] bg-[var(--color-yellow)]/35" : "border-white/50 bg-white/50"
+                  }`}
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    {fb.pinned && (
+                      <span className="rounded-full bg-[var(--color-orange-deep)] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+                        📌 Pinned
+                      </span>
+                    )}
+                    <span
+                      className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+                        fb.type === "quote" ? "bg-[#1c2b30] text-[var(--color-yellow)]" : "bg-[var(--color-orange)] text-white"
+                      }`}
+                    >
+                      {fb.type === "quote" ? "Quote request" : "Feedback"}
+                    </span>
+                    <span className="text-[11px] font-semibold text-[var(--color-ink-soft)]">
+                      {fb.authorName ?? "Anonymous"}
+                      {fb.authorEmail ? ` · ${fb.authorEmail}` : ""} · {new Date(fb.createdAt).toLocaleString()}
+                    </span>
+                  </div>
+                  <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-[var(--color-ink)]">{fb.message}</p>
+                  <div className="mt-3 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleTogglePin(fb.id)}
+                      className="btn-pop rounded-full border-2 border-[var(--color-orange-deep)] px-4 py-1 text-xs font-bold text-[var(--color-orange-deep)]"
+                    >
+                      {fb.pinned ? "Unpin" : "Pin to top"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteFeedback(fb.id)}
+                      className="btn-pop rounded-full bg-[#b3261e] px-4 py-1 text-xs font-bold text-white"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </ScrollReveal>
       </section>
 
